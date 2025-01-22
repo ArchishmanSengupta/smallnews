@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:smallnews/models/news_response.dart';
+import 'package:smallnews/models/models.dart';
 
 class NewsRepository {
   Future<NewsResponse> fetchNews(String query, int page) async {
