@@ -155,7 +155,7 @@ class NewsCard extends StatelessWidget {
       child: Text(
         article.source.name,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontSize: 12,
+              fontSize: 8,
               color: Theme.of(context).primaryColor,
             ),
       ),

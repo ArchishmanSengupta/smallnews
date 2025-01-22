@@ -174,61 +174,65 @@ class _SearchPageState extends State<SearchPage>
       ),
       child: Scaffold(
         body: SafeArea(
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CupertinoButton(
-                            padding: EdgeInsets.zero,
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Icon(
-                              CupertinoIcons.back,
-                              color: AppTheme.secondaryColor,
-                            ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Icon(
+                            CupertinoIcons.back,
+                            color: AppTheme.secondaryColor,
                           ),
-                          const Text(
-                            'Discover',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.secondaryColor,
-                            ),
+                        ),
+                        const Text(
+                          'Discover',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.secondaryColor,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'News from all around the world',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey[600],
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'News from all around the world',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey[600],
                       ),
-                      const SizedBox(height: 24),
-                      FadeTransition(
-                        opacity: _searchBarAnimation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.2),
-                            end: Offset.zero,
-                          ).animate(_searchBarAnimation),
-                          child: _buildSearchBar(),
-                        ),
+                    ),
+                    const SizedBox(height: 24),
+                    FadeTransition(
+                      opacity: _searchBarAnimation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.2),
+                          end: Offset.zero,
+                        ).animate(_searchBarAnimation),
+                        child: _buildSearchBar(),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                sliver: _buildContent(),
+              Expanded(
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      sliver: _buildContent(),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

@@ -87,4 +87,39 @@ class NewsRepository {
       throw Exception('$e');
     }
   }
+
+  /// Fetches top headlines for a specific country.
+  ///
+  /// The [page] parameter specifies the page number of the results to fetch.
+  ///
+  /// Returns a [NewsResponse] containing the news articles.
+  ///
+  /// Throws an [Exception] if the network request fails or if the response status code is not 200.
+  static Future<NewsResponse> fetchTopHeadlines(int page) async {
+    final String apiKey = dotenv.env['NEWS_API_KEY'] ?? '';
+    const String authority = 'newsapi.org';
+    const String path = '/v2/top-headlines';
+
+    final String url = Uri.https(authority, path, {
+      'country': 'us',
+      'page': page.toString(),
+      'pageSize': '20',
+      'apiKey': apiKey,
+    }).toString();
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        return NewsResponse.fromJson(data);
+      } else if (response.statusCode == 429) {
+        throw Exception('Too many requests 😢');
+      } else {
+        throw Exception('Failed to load news: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('$e');
+    }
+  }
 }

@@ -16,6 +16,7 @@ class _HomePageState extends State<HomePage>
   final TextEditingController _searchController = TextEditingController();
   TabController? _tabController;
   Future<NewsResponse>? _futureNewsResponse;
+  Future<NewsResponse>? _futureTopHeadlineResponse;
   List<Article> _articles = [];
   int _currentPage = 1;
   bool _isLoadingMore = false;
@@ -37,6 +38,7 @@ class _HomePageState extends State<HomePage>
     _tabController?.addListener(_onTabChanged);
     _futureNewsResponse =
         NewsRepository.fetchNewsByCategory(categories[0], _currentPage);
+    _futureTopHeadlineResponse = NewsRepository.fetchTopHeadlines(_currentPage);
     _scrollController.addListener(_onScroll);
   }
 
@@ -138,7 +140,22 @@ class _HomePageState extends State<HomePage>
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SearchPage()),
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      const SearchPage(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(1.0, 0.0);
+                    const end = Offset.zero;
+                    final tween = Tween(begin: begin, end: end);
+                    final offsetAnimation = animation.drive(tween);
+                    return SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
+                    );
+                  },
+                  transitionDuration: const Duration(milliseconds: 300),
+                ),
               );
             },
             child: Padding(
@@ -166,6 +183,7 @@ class _HomePageState extends State<HomePage>
               ),
             ),
           ),
+          _buildTopHeadlines(),
           TabBar(
             isScrollable: true,
             labelStyle: const TextStyle(
@@ -215,6 +233,55 @@ class _HomePageState extends State<HomePage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTopHeadlines() {
+    return SizedBox(
+      height: 270,
+      child: FutureBuilder<NewsResponse>(
+        future: _futureTopHeadlineResponse,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              itemCount: 3,
+              itemBuilder: (context, index) => const ShimmerLoading(),
+            );
+          }
+          if (!snapshot.hasData || snapshot.data?.articles.isEmpty == true) {
+            return const Center(child: Text('No breaking news available'));
+          }
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            cacheExtent: 500,
+            addAutomaticKeepAlives: true,
+            itemCount: snapshot.data?.articles.take(5).length ?? 0,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: SizedBox(
+                  width: 300,
+                  height: 500,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      BreakingNewsCard(
+                        article: snapshot.data!.articles[index],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
