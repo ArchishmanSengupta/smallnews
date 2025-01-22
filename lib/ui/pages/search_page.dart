@@ -1,6 +1,10 @@
+import 'dart:async';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:smallnews/models/models.dart';
 import 'package:smallnews/repository/respository.dart';
+import 'package:smallnews/theme/app_theme.dart';
 import 'package:smallnews/ui/widgets/widgets.dart';
 
 class SearchPage extends StatefulWidget {
@@ -16,10 +20,7 @@ class _SearchPageState extends State<SearchPage>
   late AnimationController _animationController;
   late Animation<double> _searchBarAnimation;
   final ScrollController _scrollController = ScrollController();
-  final NewsRepository _newsRepository = NewsRepository();
-
-  final Map<String, List<Article>> _searchCache = {};
-  final int _maxCacheSize = 5;
+  Timer? _debounceTimer;
 
   bool _isLoading = false;
   bool _isLoadingMore = false;
@@ -27,13 +28,27 @@ class _SearchPageState extends State<SearchPage>
   int _currentPage = 1;
   List<Article> _articles = [];
   String? _error;
+  bool _hasMore = true;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
     _setupAnimations();
+    _setupSearchListener();
     _setupScrollListener();
+  }
+
+  void _setupSearchListener() {
+    _searchController.addListener(() {
+      if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+      _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+        final query = _searchController.text.trim();
+        if (query.isNotEmpty && query != _currentQuery) {
+          _performSearch();
+        }
+      });
+    });
   }
 
   void _setupAnimations() {
@@ -50,8 +65,11 @@ class _SearchPageState extends State<SearchPage>
 
   void _setupScrollListener() {
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
+      if (!_isLoading &&
+          !_isLoadingMore &&
+          _hasMore &&
+          _scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 200) {
         _loadMoreResults();
       }
     });
@@ -65,44 +83,38 @@ class _SearchPageState extends State<SearchPage>
       _isLoading = true;
       _error = null;
       _currentPage = 1;
+      _articles = [];
+      _currentQuery = query;
+      _hasMore = true;
     });
 
     try {
-      if (_searchCache.containsKey(query)) {
-        setState(() {
-          _articles = _searchCache[query]!;
-          _isLoading = false;
-          _currentQuery = query;
-        });
-        return;
-      }
-
       final results = await NewsRepository.fetchNews(query, _currentPage);
+      if (!mounted) return;
+
       setState(() {
-        _articles = results.articles;
-        _currentQuery = query;
-        _updateCache(query, results.articles);
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Failed to fetch news articles. Please try again.';
-      });
-    } finally {
-      setState(() {
+        if (results.articles.isEmpty) {
+          _error = 'No articles found for this search term.';
+          _hasMore = false;
+        } else {
+          _articles = results.articles;
+          _hasMore = results.articles.length >= 20;
+        }
         _isLoading = false;
       });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString().replaceAll('Exception:', '').trim();
+        _isLoading = false;
+        _hasMore = false;
+      });
     }
-  }
-
-  void _updateCache(String query, List<Article> results) {
-    if (_searchCache.length >= _maxCacheSize) {
-      _searchCache.remove(_searchCache.keys.first);
-    }
-    _searchCache[query] = results;
   }
 
   Future<void> _loadMoreResults() async {
-    if (_isLoadingMore || _isLoading || _currentQuery.isEmpty) return;
+    if (_isLoadingMore || _isLoading || !_hasMore || _currentQuery.isEmpty)
+      return;
 
     setState(() {
       _isLoadingMore = true;
@@ -110,32 +122,40 @@ class _SearchPageState extends State<SearchPage>
 
     try {
       final nextPage = _currentPage + 1;
-      final moreResults =
-          await NewsRepository.fetchNews(_currentQuery, nextPage);
+      final results = await NewsRepository.fetchNews(_currentQuery, nextPage);
 
-      if (moreResults.articles.isNotEmpty) {
-        setState(() {
-          _articles.addAll(moreResults.articles);
+      if (!mounted) return;
+
+      setState(() {
+        if (results.articles.isNotEmpty) {
+          _articles.addAll(results.articles);
           _currentPage = nextPage;
-        });
-      }
+          _hasMore = results.articles.length >= 20;
+        } else {
+          _hasMore = false;
+        }
+        _isLoadingMore = false;
+      });
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load more articles')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoadingMore = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _isLoadingMore = false;
+        _hasMore = false;
+      });
+
+      final errorMsg = e.toString().replaceAll('Exception:', '').trim();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMsg),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     _animationController.dispose();
@@ -163,20 +183,33 @@ class _SearchPageState extends State<SearchPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Discover',
-                        style:
-                            Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[900],
-                                ),
+                      Row(
+                        children: [
+                          CupertinoButton(
+                            padding: EdgeInsets.zero,
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Icon(
+                              CupertinoIcons.back,
+                              color: AppTheme.secondaryColor,
+                            ),
+                          ),
+                          const Text(
+                            'Discover',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.secondaryColor,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'News from all around the world',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey[600],
+                        ),
                       ),
                       const SizedBox(height: 24),
                       FadeTransition(
@@ -212,8 +245,8 @@ class _SearchPageState extends State<SearchPage>
         boxShadow: [
           BoxShadow(
             color: Colors.grey[300]!,
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: 8,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -223,17 +256,26 @@ class _SearchPageState extends State<SearchPage>
           hintText: 'Search',
           hintStyle: TextStyle(color: Colors.grey[400]),
           prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-          suffixIcon: IconButton(
-            icon: Icon(Icons.tune, color: Colors.grey[400]),
-            onPressed: () {
-              // Add filters functionality here
-            },
-          ),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: Icon(Icons.clear, color: Colors.grey[400]),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _articles = [];
+                      _error = null;
+                      _currentQuery = '';
+                      _hasMore = true;
+                    });
+                  },
+                )
+              : null,
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
         onSubmitted: (_) => _performSearch(),
+        textInputAction: TextInputAction.search,
       ),
     );
   }
@@ -251,7 +293,14 @@ class _SearchPageState extends State<SearchPage>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(_error!, style: TextStyle(color: Colors.grey[600])),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Colors.grey[600]),
+                  textAlign: TextAlign.center,
+                ),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _performSearch,
@@ -298,11 +347,12 @@ class _SearchPageState extends State<SearchPage>
           }
 
           final article = _articles[index];
-          return AnimatedOpacity(
-            duration: const Duration(milliseconds: 300),
-            opacity: 1.0,
-            child: NewsCard(
-              article: article,
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: 1.0,
+              child: NewsCard(article: article),
             ),
           );
         },

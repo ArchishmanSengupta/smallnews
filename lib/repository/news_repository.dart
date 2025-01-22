@@ -19,12 +19,13 @@ class NewsRepository {
   /// Throws an [Exception] if the network request fails or if the response status code is not 200.
   static Future<NewsResponse> fetchNews(String query, int page) async {
     final String apiKey = dotenv.env['NEWS_API_KEY'] ?? '';
-    const String baseUrl = 'https://newsapi.org/v2/everything';
+    const String authority = 'newsapi.org';
+    const String path = '/v2/everything';
     final DateTime now = DateTime.now();
     final DateTime thirtyDaysAgo = now.subtract(const Duration(days: 30));
     final String fromDate = DateFormat('yyyy-MM-dd').format(thirtyDaysAgo);
 
-    final String url = Uri.https(baseUrl, '', {
+    final String url = Uri.https(authority, path, {
       'q': query,
       'from': fromDate,
       'sortBy': 'publishedAt',
@@ -60,12 +61,20 @@ class NewsRepository {
   static Future<NewsResponse> fetchNewsByCategory(
       String category, int page) async {
     final String apiKey = dotenv.env['NEWS_API_KEY'] ?? '';
-    const String baseUrl = 'https://newsapi.org/v2/top-headlines';
-    try {
-      final String url =
-          '$baseUrl?country=us&category=$category&page=$page&pageSize=20&apiKey=$apiKey';
+    const String authority = 'newsapi.org';
+    const String path = '/v2/top-headlines';
 
+    final String url = Uri.https(authority, path, {
+      'country': 'us',
+      'category': category,
+      'page': page.toString(),
+      'pageSize': '20',
+      'apiKey': apiKey,
+    }).toString();
+
+    try {
       final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         return NewsResponse.fromJson(data);

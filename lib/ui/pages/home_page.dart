@@ -103,7 +103,6 @@ class _HomePageState extends State<HomePage>
       setState(() {
         _isLoadingMore = false;
       });
-      // Handle error
     }
   }
 
@@ -206,6 +205,7 @@ class _HomePageState extends State<HomePage>
                     ))
                 .toList(),
           ),
+          const SizedBox(height: 16),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -225,6 +225,7 @@ class _HomePageState extends State<HomePage>
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return ListView.builder(
+            cacheExtent: 500,
             itemCount: 10,
             itemBuilder: (context, index) {
               return const ShimmerLoading();
@@ -238,14 +239,23 @@ class _HomePageState extends State<HomePage>
         } else {
           _articles = snapshot.data?.articles ?? [];
           return ListView.builder(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+              decelerationRate: ScrollDecelerationRate.fast,
+            ),
+            cacheExtent: 1000.0,
+            addAutomaticKeepAlives: true,
+            addRepaintBoundaries: true,
             controller: _scrollController,
             itemCount: _articles.length + (_isLoadingMore ? 1 : 0),
+            clipBehavior: Clip.none,
             itemBuilder: (context, index) {
               if (index >= _articles.length) {
                 return const ShimmerLoading();
               }
-              final article = _articles[index];
-              return NewsCard(article: article);
+              return RepaintBoundary(
+                child: NewsCard(article: _articles[index]),
+              );
             },
           );
         }
