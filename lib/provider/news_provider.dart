@@ -3,8 +3,6 @@ import 'package:smallnews/models/models.dart';
 import 'package:smallnews/repository/respository.dart';
 
 class NewsProvider extends ChangeNotifier {
-  final NewsRepository repository;
-
   List<Article> _articles = [];
   bool _isLoading = false;
   String _error = '';
@@ -12,8 +10,6 @@ class NewsProvider extends ChangeNotifier {
   int _currentPage = 1;
   bool _hasReachedEnd = false;
   int _totalResults = 0;
-
-  NewsProvider(this.repository);
 
   List<Article> get articles => _articles;
   bool get isLoading => _isLoading;
@@ -31,7 +27,7 @@ class NewsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await repository.fetchNews(query, _currentPage);
+      final response = await NewsRepository.fetchNews(query, _currentPage);
       _articles = response.articles;
       _totalResults = response.totalResults;
       _hasReachedEnd = _articles.length >= _totalResults;
@@ -53,7 +49,7 @@ class NewsProvider extends ChangeNotifier {
 
     try {
       final nextPage = _currentPage + 1;
-      final response = await repository.fetchNews(_currentQuery, nextPage);
+      final response = await NewsRepository.fetchNews(_currentQuery, nextPage);
 
       _articles = [..._articles, ...response.articles];
       _currentPage = nextPage;
