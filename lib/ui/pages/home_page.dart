@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smallnews/models/models.dart';
 import 'package:smallnews/repository/respository.dart';
-import 'package:smallnews/ui/widgets/news_card.dart';
+import 'package:smallnews/ui/ui.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,28 +10,106 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
+  TabController? _tabController;
   Future<NewsResponse>? _futureNewsResponse;
+  List<Article> _articles = [];
+  int _currentPage = 1;
+  bool _isLoadingMore = false;
+  final ScrollController _scrollController = ScrollController();
+
+  final List<String> categories = [
+    'general',
+    'Technology',
+    'Business',
+    'sports'
+  ];
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
+    _tabController = TabController(length: categories.length, vsync: this);
+    _tabController?.addListener(_onTabChanged);
+    _futureNewsResponse =
+        NewsRepository.fetchNewsByCategory(categories[0], _currentPage);
+    _scrollController.addListener(_onScroll);
   }
 
   void _onSearchChanged() {
     final query = _searchController.text;
     if (query.isNotEmpty) {
       setState(() {
-        _futureNewsResponse = NewsRepository.fetchNews(query, 1);
+        _currentPage = 1;
+        _articles = [];
+        _futureNewsResponse = NewsRepository.fetchNews(query, _currentPage);
       });
+    } else {
+      setState(() {
+        _currentPage = 1;
+        _articles = [];
+        _futureNewsResponse =
+            NewsRepository.fetchNewsByCategory(categories[0], _currentPage);
+      });
+    }
+  }
+
+  void _onTabChanged() {
+    final category = categories[_tabController?.index ?? 0];
+    setState(() {
+      _currentPage = 1;
+      _articles = [];
+      _futureNewsResponse =
+          NewsRepository.fetchNewsByCategory(category, _currentPage);
+    });
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      _loadMore();
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_isLoadingMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    final query = _searchController.text;
+    final category = categories[_tabController?.index ?? 0];
+
+    try {
+      final NewsResponse response;
+      if (query.isNotEmpty) {
+        response = await NewsRepository.fetchNews(query, _currentPage + 1);
+      } else {
+        response = await NewsRepository.fetchNewsByCategory(
+            category, _currentPage + 1);
+      }
+
+      setState(() {
+        _currentPage++;
+        _articles.addAll(response.articles);
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingMore = false;
+      });
+      // Handle error
     }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _tabController?.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -40,9 +118,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         leading: Image.asset('assets/images/smallnews_logo.png'),
-        title: const Text(
-          'smallnews',
-        ),
+        title: const Text('smallnews'),
       ),
       body: Column(
         children: [
@@ -51,37 +127,63 @@ class _HomePageState extends State<HomePage> {
             child: TextField(
               controller: _searchController,
               decoration: const InputDecoration(
-                hintText: 'Search news...',
+                hintText: 'Search items, collections, and accounts',
                 border: OutlineInputBorder(),
               ),
             ),
           ),
+          TabBar(
+            controller: _tabController,
+            indicatorColor: Theme.of(context).primaryColor,
+            tabs: categories
+                .map((category) => Tab(text: category.capitalize()))
+                .toList(),
+          ),
           Expanded(
-            child: FutureBuilder<NewsResponse>(
-              future: _futureNewsResponse,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData ||
-                    snapshot.data?.articles.isEmpty == true) {
-                  return const Center(child: Text('No articles found.'));
-                } else {
-                  final articles = snapshot.data?.articles;
-                  return ListView.builder(
-                    itemCount: articles?.length ?? 0,
-                    itemBuilder: (context, index) {
-                      final article = articles?[index];
-                      return NewsCard(article: article!);
-                    },
-                  );
-                }
-              },
+            child: TabBarView(
+              controller: _tabController,
+              children: categories
+                  .map((category) => _buildNewsList(category))
+                  .toList(),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildNewsList(String category) {
+    return FutureBuilder<NewsResponse>(
+      future: _futureNewsResponse,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const ShimmerLoading();
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData ||
+            snapshot.data?.articles.isEmpty == true) {
+          return const Center(child: Text('No articles found.'));
+        } else {
+          _articles = snapshot.data?.articles ?? [];
+          return ListView.builder(
+            controller: _scrollController,
+            itemCount: _articles.length + (_isLoadingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index >= _articles.length) {
+                return const ShimmerLoading();
+              }
+              final article = _articles[index];
+              return NewsCard(article: article);
+            },
+          );
+        }
+      },
+    );
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

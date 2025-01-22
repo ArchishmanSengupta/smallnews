@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:smallnews/models/models.dart';
+import 'package:smallnews/ui/ui.dart';
 
 class NewsCard extends StatelessWidget {
   final Article article;
@@ -20,53 +20,6 @@ class NewsCard extends StatelessWidget {
     } else {
       return '${difference.inMinutes}m ago';
     }
-  }
-
-  Widget _buildShimmer() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 130,
-                height: 155,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildShimmerLine(),
-                    const SizedBox(height: 8),
-                    _buildShimmerLine(),
-                    const SizedBox(height: 8),
-                    _buildShimmerLine(),
-                    const SizedBox(height: 8),
-                    _buildShimmerLine(width: 100),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Divider(),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildShimmerLine({double width = double.infinity}) {
-    return Container(
-      width: width,
-      height: 8,
-      color: Colors.white,
-    );
   }
 
   Widget _buildArticleContent(BuildContext context) {
@@ -177,7 +130,7 @@ class NewsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: isLoading ? _buildShimmer() : _buildArticleContent(context),
+      child: isLoading ? const ShimmerLoading() : _buildArticleContent(context),
     );
   }
 }
