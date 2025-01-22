@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smallnews/models/models.dart';
 import 'package:smallnews/repository/respository.dart';
+import 'package:smallnews/theme/app_theme.dart';
 import 'package:smallnews/ui/ui.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,7 +25,8 @@ class _HomePageState extends State<HomePage>
     'general',
     'Technology',
     'Business',
-    'sports'
+    'sports',
+    'health'
   ];
 
   @override
@@ -117,26 +119,76 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Image.asset('assets/images/smallnews_logo.png'),
-        title: const Text('smallnews'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset(
+            'assets/images/smallnews_logo.png',
+            height: 30,
+            width: 30,
+          ),
+        ),
+        title: const Text(
+          'smallnews',
+          style:
+              TextStyle(fontSize: 16, fontFamily: 'Graphik', letterSpacing: 1),
+        ),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Search items, collections, and accounts',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: 'Search',
+                hintStyle: const TextStyle(fontSize: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.grey[200],
+                prefixIcon: const Icon(Icons.search),
               ),
             ),
           ),
           TabBar(
+            isScrollable: true,
+            labelStyle: const TextStyle(
+              fontSize: 14,
+              fontFamily: 'Graphik',
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontSize: 12,
+              fontFamily: 'Graphik',
+              fontWeight: FontWeight.w500,
+            ),
             controller: _tabController,
-            indicatorColor: Theme.of(context).primaryColor,
+            indicator: const UnderlineTabIndicator(
+              borderSide: BorderSide(
+                width: 2.0,
+                color: AppTheme.secondaryColor,
+              ),
+              insets: EdgeInsets.symmetric(horizontal: 16.0),
+            ),
+            unselectedLabelColor: Colors.grey[600],
+            labelColor: AppTheme.secondaryColor,
             tabs: categories
-                .map((category) => Tab(text: category.capitalize()))
+                .map((category) => Tab(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        child: Text(
+                          category == 'Technology'
+                              ? 'Tech'
+                              : category.capitalize(),
+                          style: const TextStyle(
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
+                    ))
                 .toList(),
           ),
           Expanded(
@@ -157,7 +209,12 @@ class _HomePageState extends State<HomePage>
       future: _futureNewsResponse,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const ShimmerLoading();
+          return ListView.builder(
+            itemCount: 10,
+            itemBuilder: (context, index) {
+              return const ShimmerLoading();
+            },
+          );
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData ||

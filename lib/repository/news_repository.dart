@@ -19,7 +19,8 @@ class NewsRepository {
   /// Throws an [Exception] if the network request fails or if the response status code is not 200.
   static Future<NewsResponse> fetchNews(String query, int page) async {
     final String apiKey = dotenv.env['NEWS_API_KEY'] ?? '';
-    const String baseUrl = 'https://newsapi.org/v2/everything';
+    // const String baseUrl = 'https://newsapi.org/v2/everything';
+    const String baseUrl = 'https://test.org/v2/everything';
     final DateTime now = DateTime.now();
     final DateTime thirtyDaysAgo = now.subtract(const Duration(days: 30));
     final String fromDate = DateFormat('yyyy-MM-dd').format(thirtyDaysAgo);
@@ -39,11 +40,13 @@ class NewsRepository {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         return NewsResponse.fromJson(data);
+      } else if (response.statusCode == 429) {
+        throw Exception('Too many requests 😢');
       } else {
         throw Exception('Failed to load news: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Network error: $e');
+      throw Exception('$e');
     }
   }
 
@@ -58,7 +61,8 @@ class NewsRepository {
   static Future<NewsResponse> fetchNewsByCategory(
       String category, int page) async {
     final String apiKey = dotenv.env['NEWS_API_KEY'] ?? '';
-    const String baseUrl = 'https://newsapi.org/v2/top-headlines';
+    // const String baseUrl = 'https://newsapi.org/v2/top-headlines';
+    const String baseUrl = 'https://test.org/v2/top-headlines';
     try {
       final String url =
           '$baseUrl?country=us&category=$category&page=$page&pageSize=20&apiKey=$apiKey';
@@ -67,11 +71,13 @@ class NewsRepository {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         return NewsResponse.fromJson(data);
+      } else if (response.statusCode == 429) {
+        throw Exception('Too many requests 😢');
       } else {
         throw Exception('Failed to load news: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Network error: $e');
+      throw Exception('$e');
     }
   }
 }

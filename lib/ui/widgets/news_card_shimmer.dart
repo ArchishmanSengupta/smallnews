@@ -9,37 +9,43 @@ class ShimmerLoading extends StatelessWidget {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 80,
-                height: 100,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ShimmerLine(),
-                    SizedBox(height: 4),
-                    ShimmerLine(),
-                    SizedBox(height: 4),
-                    ShimmerLine(),
-                    SizedBox(height: 4),
-                    ShimmerLine(width: 60),
-                  ],
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 100,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          const Divider(),
-          const SizedBox(height: 4),
-        ],
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ShimmerLine(),
+                      SizedBox(height: 8),
+                      ShimmerLine(),
+                      SizedBox(height: 8),
+                      ShimmerLine(),
+                      SizedBox(height: 8),
+                      ShimmerLine(width: 80),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -54,8 +60,11 @@ class ShimmerLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      height: 6,
-      color: Colors.white,
+      height: 8,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(4),
+      ),
     );
   }
 }
