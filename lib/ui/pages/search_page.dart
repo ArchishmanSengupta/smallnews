@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smallnews/data/data.dart';
-import 'package:smallnews/repository/respository.dart';
+import 'package:smallnews/services/services.dart';
 import 'package:smallnews/theme/app_theme.dart';
 import 'package:smallnews/ui/widgets/widgets.dart';
 
@@ -30,6 +31,8 @@ class _SearchPageState extends State<SearchPage>
   String? _error;
   bool _hasMore = true;
 
+  List<String> _recentSearches = [];
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +40,7 @@ class _SearchPageState extends State<SearchPage>
     _setupAnimations();
     _setupSearchListener();
     _setupScrollListener();
+    _loadRecentSearches();
   }
 
   void _setupSearchListener() {
@@ -102,6 +106,8 @@ class _SearchPageState extends State<SearchPage>
         }
         _isLoading = false;
       });
+
+      _saveRecentSearch(query);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -151,6 +157,23 @@ class _SearchPageState extends State<SearchPage>
         ),
       );
     }
+  }
+
+  Future<void> _saveRecentSearch(String query) async {
+    final prefs = await SharedPreferences.getInstance();
+    _recentSearches.remove(query);
+    _recentSearches.insert(0, query);
+    if (_recentSearches.length > 5) {
+      _recentSearches = _recentSearches.sublist(0, 5);
+    }
+    await prefs.setStringList('recent_searches', _recentSearches);
+  }
+
+  Future<void> _loadRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _recentSearches = prefs.getStringList('recent_searches') ?? [];
+    });
   }
 
   @override
@@ -329,6 +352,24 @@ class _SearchPageState extends State<SearchPage>
       return const SliverFillRemaining(
         child: Center(
           child: Text('No articles found. Try a different search term.'),
+        ),
+      );
+    }
+
+    if (_articles.isEmpty && _currentQuery.isEmpty) {
+      return SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final query = _recentSearches[index];
+            return ListTile(
+              title: Text(query),
+              onTap: () {
+                _searchController.text = query;
+                _performSearch();
+              },
+            );
+          },
+          childCount: _recentSearches.length,
         ),
       );
     }

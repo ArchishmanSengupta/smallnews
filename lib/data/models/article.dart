@@ -33,4 +33,38 @@ class Article {
       content: json['content'] ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'author': author,
+      'title': title,
+      'description': description,
+      'url': url,
+      'urlToImage': urlToImage,
+      'publishedAt': DateTime.parse(publishedAt).toUtc().toIso8601String(),
+      'content': content,
+    };
+  }
+
+  Article copyWith({
+    Source? source,
+    String? author,
+    String? title,
+    String? description,
+    String? url,
+    String? urlToImage,
+    String? publishedAt,
+    String? content,
+  }) {
+    return Article(
+      source: source ?? this.source,
+      author: author ?? this.author,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      url: url ?? this.url,
+      urlToImage: urlToImage ?? this.urlToImage,
+      publishedAt: publishedAt ?? this.publishedAt,
+      content: content ?? this.content,
+    );
+  }
 }

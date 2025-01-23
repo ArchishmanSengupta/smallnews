@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smallnews/data/data.dart';
-import 'package:smallnews/repository/respository.dart';
+import 'package:smallnews/services/services.dart';
 import 'package:smallnews/theme/app_theme.dart';
 import 'package:smallnews/ui/ui.dart';
 import 'package:smallnews/util/util.dart';
