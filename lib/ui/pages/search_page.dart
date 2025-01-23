@@ -119,8 +119,9 @@ class _SearchPageState extends State<SearchPage>
   }
 
   Future<void> _loadMoreResults() async {
-    if (_isLoadingMore || _isLoading || !_hasMore || _currentQuery.isEmpty)
+    if (_isLoadingMore || _isLoading || !_hasMore || _currentQuery.isEmpty) {
       return;
+    }
 
     setState(() {
       _isLoadingMore = true;
@@ -173,6 +174,14 @@ class _SearchPageState extends State<SearchPage>
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _recentSearches = prefs.getStringList('recent_searches') ?? [];
+    });
+  }
+
+  Future<void> _clearRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('recent_searches');
+    setState(() {
+      _recentSearches = [];
     });
   }
 
@@ -270,26 +279,40 @@ class _SearchPageState extends State<SearchPage>
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey[300]!,
-            blurRadius: 8,
-            offset: const Offset(0, 1),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey[300]!,
+                blurRadius: 8,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: AppStrings.search,
-          hintStyle: TextStyle(color: Colors.grey[400]),
-          prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.search,
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
+                  ),
+                  onSubmitted: (_) => _performSearch(),
+                  textInputAction: TextInputAction.search,
+                ),
+              ),
+              if (_searchController.text.isNotEmpty)
+                IconButton(
                   icon: Icon(Icons.clear, color: Colors.grey[400]),
                   onPressed: () {
                     _searchController.clear();
@@ -300,15 +323,38 @@ class _SearchPageState extends State<SearchPage>
                       _hasMore = true;
                     });
                   },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                ),
+            ],
+          ),
         ),
-        onSubmitted: (_) => _performSearch(),
-        textInputAction: TextInputAction.search,
-      ),
+
+        // Recent Searches Section - only show when search bar is empty and there are recent searches
+        if (_searchController.text.isEmpty && _recentSearches.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Your recent searches',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+              TextButton(
+                onPressed: _clearRecentSearches,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.secondaryColor,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                child: const Text('Clear'),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 
@@ -366,12 +412,32 @@ class _SearchPageState extends State<SearchPage>
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final query = _recentSearches[index];
-            return ListTile(
-              title: Text(query),
-              onTap: () {
-                _searchController.text = query;
-                _performSearch();
-              },
+            return Column(
+              children: [
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  leading:
+                      const Icon(Icons.history, color: AppTheme.secondaryColor),
+                  title: Text(
+                    query,
+                    style: TextStyle(
+                      color: Colors.grey[800],
+                      fontSize: 15,
+                    ),
+                  ),
+                  onTap: () {
+                    _searchController.text = query;
+                    _performSearch();
+                  },
+                ),
+                if (index < _recentSearches.length - 1)
+                  Divider(
+                    height: 1,
+                    color: Colors.grey[300],
+                    indent: 4,
+                    endIndent: 4,
+                  ),
+              ],
             );
           },
           childCount: _recentSearches.length,

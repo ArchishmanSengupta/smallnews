@@ -16,27 +16,18 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  final List<String> _categories = [
-    'general',
-    'Technology',
-    'Business',
-    'sports',
-    'health',
-    'entertainment',
-  ];
-
   final Map<String, NewsListState> _categoryStates = {};
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _categories.length, vsync: this);
+    _tabController = TabController(length: categories.length, vsync: this);
 
-    _initializeCategoryState(_categories[0]);
+    _initializeCategoryState(categories[0]);
 
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
-        _onTabChanged(_categories[_tabController.index]);
+        _onTabChanged(categories[_tabController.index]);
       }
     });
   }
@@ -52,7 +43,9 @@ class _HomePageState extends State<HomePage>
   }
 
   void _onTabChanged(String category) {
-    _initializeCategoryState(category);
+    if (_categoryStates[category]!.articles.isEmpty) {
+      _initializeCategoryState(category);
+    }
     setState(() {});
   }
 
@@ -143,7 +136,7 @@ class _HomePageState extends State<HomePage>
             controller: _tabController,
             labelColor: AppTheme.secondaryColor,
             overlayColor: WidgetStateProperty.all(Colors.transparent),
-            tabs: _categories
+            tabs: categories
                 .map((category) => Tab(
                       child: Text(
                         category == 'Technology'
@@ -157,7 +150,7 @@ class _HomePageState extends State<HomePage>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: _categories.map((category) {
+              children: categories.map((category) {
                 final categoryState = _categoryStates[category] ??
                     NewsListState(
                       futureNewsResponse:
@@ -181,7 +174,8 @@ class _HomePageState extends State<HomePage>
     return FutureBuilder<NewsResponse>(
       future: categoryState.futureNewsResponse,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            categoryState.articles.isEmpty) {
           return ListView.builder(
             itemCount: 10,
             itemBuilder: (context, index) => const ShimmerLoading(),
