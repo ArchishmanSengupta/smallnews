@@ -14,7 +14,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
-  final TextEditingController _searchController = TextEditingController();
   late TabController _tabController;
 
   final List<String> _categories = [
@@ -237,7 +236,6 @@ class _HomePageState extends State<HomePage>
   @override
   void dispose() {
     _tabController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 }

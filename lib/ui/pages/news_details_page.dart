@@ -1,3 +1,21 @@
+/// A page that displays the details of a news article.
+///
+/// The [NewsDetailsPage] widget is a stateful widget that takes an [Article]
+/// object as a required parameter. It displays the article's image, source,
+/// title, and publication date, and provides a back button to navigate back
+/// to the previous screen.
+///
+/// The page consists of a [Scaffold] with a [Column] containing a [Stack]
+/// that displays the article's image with a gradient overlay, and a [WebViewArticle]
+/// that loads the article's URL.
+///
+/// The [NewsDetailsPage] widget uses the following packages:
+/// - `flutter/material.dart` for UI components.
+/// - `intl/intl.dart` for date formatting.
+/// - `smallnews/data/data.dart` for the [Article] model.
+/// - `smallnews/ui/ui.dart` for the [WebViewArticle] widget.
+library;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:smallnews/data/data.dart';

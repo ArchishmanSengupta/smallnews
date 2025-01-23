@@ -9,6 +9,9 @@ import 'package:smallnews/data/models/models.dart';
 
 /// A repository class that handles fetching news data from the News API.
 class NewsRepository {
+  static final String apiKey = dotenv.env['NEWS_API_KEY'] ?? '';
+  static const String authority = 'newsapi.org';
+
   /// Fetches news articles based on a search query and page number.
   ///
   /// The [query] parameter specifies the search term to look for in the news articles.
@@ -18,10 +21,10 @@ class NewsRepository {
   ///
   /// Throws an [Exception] if the network request fails or if the response status code is not 200.
   static Future<NewsResponse> fetchNews(String query, int page) async {
-    final String apiKey = dotenv.env['NEWS_API_KEY'] ?? '';
-    const String authority = 'newsapi.org';
     const String path = '/v2/everything';
     final DateTime now = DateTime.now();
+
+    /// For the Free Plan for newsapi.org, the maximum allowed date range is 30 days.
     final DateTime thirtyDaysAgo = now.subtract(const Duration(days: 30));
     final String fromDate = DateFormat('yyyy-MM-dd').format(thirtyDaysAgo);
 
@@ -60,8 +63,6 @@ class NewsRepository {
   /// Throws an [Exception] if the network request fails or if the response status code is not 200.
   static Future<NewsResponse> fetchNewsByCategory(
       String category, int page) async {
-    final String apiKey = dotenv.env['NEWS_API_KEY'] ?? '';
-    const String authority = 'newsapi.org';
     const String path = '/v2/top-headlines';
 
     final String url = Uri.https(authority, path, {
@@ -96,8 +97,6 @@ class NewsRepository {
   ///
   /// Throws an [Exception] if the network request fails or if the response status code is not 200.
   static Future<NewsResponse> fetchTopHeadlines(int page) async {
-    final String apiKey = dotenv.env['NEWS_API_KEY'] ?? '';
-    const String authority = 'newsapi.org';
     const String path = '/v2/top-headlines';
 
     final String url = Uri.https(authority, path, {
