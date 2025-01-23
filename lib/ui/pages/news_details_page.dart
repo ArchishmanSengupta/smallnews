@@ -17,11 +17,6 @@ class NewsDetailsPage extends StatefulWidget {
 
 class _NewsDetailsPageState extends State<NewsDetailsPage> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
@@ -29,10 +24,6 @@ class _NewsDetailsPageState extends State<NewsDetailsPage> {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
                 child: Image.network(
                   widget.article.urlToImage ?? '',
                   height: 300,
@@ -40,15 +31,14 @@ class _NewsDetailsPageState extends State<NewsDetailsPage> {
                   fit: BoxFit.cover,
                 ),
               ),
-              // Black Overlay
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withOpacity(0.6),
-                        Colors.black.withOpacity(0.5),
+                        Colors.black.withOpacity(0.7),
                         Colors.black.withOpacity(0.3),
+                        Colors.transparent,
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -72,9 +62,9 @@ class _NewsDetailsPageState extends State<NewsDetailsPage> {
                         color: Colors.blue.withOpacity(0.8),
                         borderRadius: BorderRadius.circular(5),
                       ),
-                      child: const Text(
-                        'Sports',
-                        style: TextStyle(
+                      child: Text(
+                        widget.article.source.name,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -101,7 +91,6 @@ class _NewsDetailsPageState extends State<NewsDetailsPage> {
                   ],
                 ),
               ),
-              // Back Button
               Positioned(
                 top: 50,
                 left: 20,
@@ -118,19 +107,9 @@ class _NewsDetailsPageState extends State<NewsDetailsPage> {
               ),
             ],
           ),
-          // WebView Section
           Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
-              child: WebViewArticle(
-                url: widget.article.url,
-              ),
+            child: WebViewArticle(
+              url: widget.article.url,
             ),
           ),
         ],
