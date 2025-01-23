@@ -38,21 +38,8 @@ class _SearchPageState extends State<SearchPage>
     super.initState();
     _searchController = TextEditingController();
     _setupAnimations();
-    _setupSearchListener();
     _setupScrollListener();
     _loadRecentSearches();
-  }
-
-  void _setupSearchListener() {
-    _searchController.addListener(() {
-      if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
-      _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-        final query = _searchController.text.trim();
-        if (query.isNotEmpty && query != _currentQuery) {
-          _performSearch();
-        }
-      });
-    });
   }
 
   void _setupAnimations() {
@@ -209,7 +196,8 @@ class _SearchPageState extends State<SearchPage>
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.only(
+                    left: 16.0, top: 16.0, right: 16.0, bottom: 8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -302,14 +290,22 @@ class _SearchPageState extends State<SearchPage>
                   decoration: InputDecoration(
                     hintText: AppStrings.search,
                     hintStyle: TextStyle(color: Colors.grey[400]),
-                    prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 16),
                   ),
-                  onSubmitted: (_) => _performSearch(),
-                  textInputAction: TextInputAction.search,
+                  textInputAction: TextInputAction.done,
                 ),
+              ),
+              IconButton(
+                icon: Icon(Icons.search, color: Colors.grey[400]),
+                onPressed: () {
+                  final query = _searchController.text.trim();
+                  if (query.isNotEmpty) {
+                    FocusScope.of(context).unfocus(); // Close keyboard
+                    _performSearch();
+                  }
+                },
               ),
               if (_searchController.text.isNotEmpty)
                 IconButton(
@@ -328,7 +324,7 @@ class _SearchPageState extends State<SearchPage>
           ),
         ),
 
-        // Recent Searches Section - only show when search bar is empty and there are recent searches
+        // Recent Searches Section remains the same
         if (_searchController.text.isEmpty && _recentSearches.isNotEmpty) ...[
           const SizedBox(height: 24),
           Row(

@@ -39,10 +39,10 @@ String formatTimeAgo(String dateStr) {
 ///
 /// These categories can be used to filter news articles based on the user's interests.
 final List<String> categories = [
-  'general',
   'Technology',
-  'Business',
   'sports',
   'health',
+  'Business',
   'entertainment',
+  'general',
 ];
