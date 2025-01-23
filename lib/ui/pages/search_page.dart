@@ -21,7 +21,6 @@ class _SearchPageState extends State<SearchPage>
   late AnimationController _animationController;
   late Animation<double> _searchBarAnimation;
   final ScrollController _scrollController = ScrollController();
-  Timer? _debounceTimer;
 
   bool _isLoading = false;
   bool _isLoadingMore = false;
@@ -174,7 +173,6 @@ class _SearchPageState extends State<SearchPage>
 
   @override
   void dispose() {
-    _debounceTimer?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     _animationController.dispose();
@@ -302,7 +300,7 @@ class _SearchPageState extends State<SearchPage>
                 onPressed: () {
                   final query = _searchController.text.trim();
                   if (query.isNotEmpty) {
-                    FocusScope.of(context).unfocus(); // Close keyboard
+                    FocusScope.of(context).unfocus();
                     _performSearch();
                   }
                 },
