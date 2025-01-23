@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:smallnews/models/models.dart';
+import 'package:smallnews/data/data.dart';
 import 'package:smallnews/repository/respository.dart';
 import 'package:smallnews/theme/app_theme.dart';
 import 'package:smallnews/ui/ui.dart';
@@ -79,16 +79,17 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: AppTheme.backgroundColor,
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Image.asset(
-            'assets/images/smallnews_logo.png',
+            AppImages.logo,
             height: 30,
             width: 30,
           ),
         ),
         title: const Text(
-          'smallnews',
+          AppStrings.appName,
           style:
               TextStyle(fontSize: 16, fontFamily: 'Graphik', letterSpacing: 1),
         ),
@@ -131,7 +132,7 @@ class _HomePageState extends State<HomePage>
                     Icon(Icons.search, color: Colors.grey),
                     SizedBox(width: 8),
                     Text(
-                      'Search',
+                      AppStrings.search,
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 12,
@@ -204,20 +205,30 @@ class _HomePageState extends State<HomePage>
             ? snapshot.data!.articles
             : categoryState.articles;
 
-        return ListView.builder(
-          physics: const BouncingScrollPhysics(),
-          itemCount: articles.length + (categoryState.isLoadingMore ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index == articles.length) {
-              return const ShimmerLoading();
-            }
-
-            if (index == articles.length - 1) {
-              onLoadMore();
-            }
-
-            return NewsCard(article: articles[index]);
+        return RefreshIndicator(
+          onRefresh: () async {
+            final response =
+                await NewsRepository.fetchNewsByCategory(category, 1);
+            setState(() {
+              categoryState.articles = response.articles;
+              categoryState.currentPage = 1;
+            });
           },
+          child: ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            itemCount: articles.length + (categoryState.isLoadingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == articles.length) {
+                return const ShimmerLoading();
+              }
+
+              if (index == articles.length - 1) {
+                onLoadMore();
+              }
+
+              return NewsCard(article: articles[index]);
+            },
+          ),
         );
       },
     );

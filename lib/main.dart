@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
+import 'package:smallnews/data/strings/strings.dart';
 import 'package:smallnews/provider/provider.dart';
 import 'package:smallnews/theme/app_theme.dart';
 import 'package:smallnews/ui/ui.dart';
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
         create: (_) => NewsProvider(),
         child: MaterialApp(
-          title: 'smallnews',
+          title: AppStrings.appName,
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
               fontFamily: 'Graphik',

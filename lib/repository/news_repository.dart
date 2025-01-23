@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:smallnews/models/models.dart';
+import 'package:smallnews/data/models/models.dart';
 
 /// A repository class that handles fetching news data from the News API.
 class NewsRepository {

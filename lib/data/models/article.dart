@@ -1,4 +1,4 @@
-import 'package:smallnews/models/models.dart';
+import 'package:smallnews/data/models/models.dart';
 
 class Article {
   final Source source;

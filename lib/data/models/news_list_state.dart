@@ -1,4 +1,4 @@
-import 'package:smallnews/models/models.dart';
+import 'package:smallnews/data/models/models.dart';
 
 class NewsListState {
   Future<NewsResponse> futureNewsResponse;

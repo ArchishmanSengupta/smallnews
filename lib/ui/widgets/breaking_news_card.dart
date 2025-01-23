@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:smallnews/models/models.dart';
+import 'package:smallnews/data/data.dart';
 
 class BreakingNewsCard extends StatelessWidget {
   final Article article;

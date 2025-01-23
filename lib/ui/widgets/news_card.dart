@@ -1,6 +1,5 @@
-import 'package:blurhash_ffi/blurhash_ffi.dart';
 import 'package:flutter/material.dart';
-import 'package:smallnews/models/models.dart';
+import 'package:smallnews/data/data.dart';
 import 'package:smallnews/ui/ui.dart';
 
 class NewsCard extends StatelessWidget {
@@ -26,54 +25,47 @@ class NewsCard extends StatelessWidget {
   Widget _buildArticleContent(BuildContext context) {
     return Column(
       children: [
-        InkWell(
-          onTap: () {
-            //TODO: go inside
-          },
+        GestureDetector(
+          // onTap: () => WebViewArticle.show(context, article.url),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => NewsDetailsPage(article: article),
+            ),
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (article.urlToImage != null && article.urlToImage!.isNotEmpty)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: FutureBuilder<String>(
-                    future:
-                        BlurhashFFI.encode(NetworkImage(article.urlToImage!)),
-                    builder: (context, snapshot) {
-                      return Stack(
-                        children: [
-                          if (snapshot.hasData)
-                            BlurhashFfi(
-                              hash: snapshot.data!,
-                              decodingWidth: 130,
-                              decodingHeight: 155,
-                              imageFit: BoxFit.cover,
-                            ),
-                          Image.network(
-                            article.urlToImage!,
-                            height: 155,
-                            width: 130,
-                            fit: BoxFit.cover,
-                            frameBuilder: (context, child, frame,
-                                wasSynchronouslyLoaded) {
-                              if (wasSynchronouslyLoaded) return child;
-                              return AnimatedOpacity(
-                                opacity: frame == null ? 0 : 1,
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOut,
-                                child: child,
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                height: 155,
-                                width: 130,
-                                color: Colors.grey[300],
-                                child: const Icon(Icons.error_outline),
-                              );
-                            },
+                  child: Image.network(
+                    article.urlToImage!,
+                    height: 155,
+                    width: 130,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        height: 155,
+                        width: 130,
+                        color: Colors.grey[300],
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
                           ),
-                        ],
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 155,
+                        width: 130,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.error_outline),
                       );
                     },
                   ),

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:smallnews/models/models.dart';
+import 'package:smallnews/data/data.dart';
 import 'package:smallnews/repository/respository.dart';
 import 'package:smallnews/theme/app_theme.dart';
 import 'package:smallnews/ui/widgets/widgets.dart';
@@ -192,7 +192,7 @@ class _SearchPageState extends State<SearchPage>
                           ),
                         ),
                         const Text(
-                          'Discover',
+                          AppStrings.discover,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -203,7 +203,7 @@ class _SearchPageState extends State<SearchPage>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'News from all around the world',
+                      AppStrings.newsFromAllAroundTheWorld,
                       style: TextStyle(
                         fontSize: 10,
                         color: Colors.grey[600],
@@ -257,7 +257,7 @@ class _SearchPageState extends State<SearchPage>
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'Search',
+          hintText: AppStrings.search,
           hintStyle: TextStyle(color: Colors.grey[400]),
           prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
           suffixIcon: _searchController.text.isNotEmpty
