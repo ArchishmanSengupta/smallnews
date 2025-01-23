@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smallnews/data/data.dart';
-import 'package:smallnews/repository/respository.dart';
+import 'package:smallnews/services/services.dart';
 import 'package:smallnews/theme/app_theme.dart';
 import 'package:smallnews/ui/ui.dart';
 import 'package:smallnews/util/util.dart';
@@ -16,27 +16,18 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  final List<String> _categories = [
-    'general',
-    'Technology',
-    'Business',
-    'sports',
-    'health',
-    'entertainment',
-  ];
-
   final Map<String, NewsListState> _categoryStates = {};
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _categories.length, vsync: this);
+    _tabController = TabController(length: categories.length, vsync: this);
 
-    _initializeCategoryState(_categories[0]);
+    _initializeCategoryState(categories[0]);
 
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
-        _onTabChanged(_categories[_tabController.index]);
+        _onTabChanged(categories[_tabController.index]);
       }
     });
   }
@@ -52,7 +43,9 @@ class _HomePageState extends State<HomePage>
   }
 
   void _onTabChanged(String category) {
-    _initializeCategoryState(category);
+    if (_categoryStates[category]!.articles.isEmpty) {
+      _initializeCategoryState(category);
+    }
     setState(() {});
   }
 
@@ -74,74 +67,68 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+  Widget _buildAppbar() {
+    return GestureDetector(
+      onTap: () => {
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const SearchPage(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              final tween = Tween(begin: begin, end: end);
+              final offsetAnimation = animation.drive(tween);
+              return SlideTransition(
+                position: offsetAnimation,
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        )
+      },
+      child: const Padding(
+        padding: EdgeInsets.only(top: 20.0),
+        child: Icon(Icons.search, color: Colors.black),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.backgroundColor,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Image.asset(
-            AppImages.logo,
-            height: 30,
-            width: 30,
+        leading: _buildAppbar(),
+        centerTitle: true,
+        title: Padding(
+          padding: const EdgeInsets.only(top: 20.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.asset(
+                  AppImages.logo,
+                  height: 30,
+                  width: 30,
+                ),
+              ),
+              const Text(
+                AppStrings.appName,
+                style: TextStyle(
+                    fontSize: 16, fontFamily: 'Graphik', letterSpacing: 1),
+              ),
+            ],
           ),
-        ),
-        title: const Text(
-          AppStrings.appName,
-          style:
-              TextStyle(fontSize: 16, fontFamily: 'Graphik', letterSpacing: 1),
         ),
       ),
       body: Column(
         children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      const SearchPage(),
-                  transitionsBuilder:
-                      (context, animation, secondaryAnimation, child) {
-                    const begin = Offset(1.0, 0.0);
-                    const end = Offset.zero;
-                    final tween = Tween(begin: begin, end: end);
-                    final offsetAnimation = animation.drive(tween);
-                    return SlideTransition(
-                      position: offsetAnimation,
-                      child: child,
-                    );
-                  },
-                  transitionDuration: const Duration(milliseconds: 300),
-                ),
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.grey),
-                    SizedBox(width: 8),
-                    Text(
-                      AppStrings.search,
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          const SizedBox(height: 16),
           TabBar(
             physics: const AlwaysScrollableScrollPhysics(),
             indicatorColor: AppTheme.primaryColor.withOpacity(0.5),
@@ -149,7 +136,7 @@ class _HomePageState extends State<HomePage>
             controller: _tabController,
             labelColor: AppTheme.secondaryColor,
             overlayColor: WidgetStateProperty.all(Colors.transparent),
-            tabs: _categories
+            tabs: categories
                 .map((category) => Tab(
                       child: Text(
                         category == 'Technology'
@@ -163,7 +150,7 @@ class _HomePageState extends State<HomePage>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: _categories.map((category) {
+              children: categories.map((category) {
                 final categoryState = _categoryStates[category] ??
                     NewsListState(
                       futureNewsResponse:
@@ -187,7 +174,8 @@ class _HomePageState extends State<HomePage>
     return FutureBuilder<NewsResponse>(
       future: categoryState.futureNewsResponse,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            categoryState.articles.isEmpty) {
           return ListView.builder(
             itemCount: 10,
             itemBuilder: (context, index) => const ShimmerLoading(),

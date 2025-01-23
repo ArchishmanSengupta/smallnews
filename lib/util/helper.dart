@@ -31,3 +31,18 @@ String formatTimeAgo(String dateStr) {
     return '${difference.inMinutes}m ago';
   }
 }
+
+/// A list of news categories used in the application.
+///
+/// This list contains the following categories:
+/// - 'general', 'technology', 'Business', 'sports', 'health', 'entertainment'
+///
+/// These categories can be used to filter news articles based on the user's interests.
+final List<String> categories = [
+  'Technology',
+  'sports',
+  'health',
+  'Business',
+  'entertainment',
+  'general',
+];

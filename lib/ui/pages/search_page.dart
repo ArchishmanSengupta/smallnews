@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smallnews/data/data.dart';
-import 'package:smallnews/repository/respository.dart';
+import 'package:smallnews/services/services.dart';
 import 'package:smallnews/theme/app_theme.dart';
 import 'package:smallnews/ui/widgets/widgets.dart';
 
@@ -30,25 +31,15 @@ class _SearchPageState extends State<SearchPage>
   String? _error;
   bool _hasMore = true;
 
+  List<String> _recentSearches = [];
+
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
     _setupAnimations();
-    _setupSearchListener();
     _setupScrollListener();
-  }
-
-  void _setupSearchListener() {
-    _searchController.addListener(() {
-      if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
-      _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-        final query = _searchController.text.trim();
-        if (query.isNotEmpty && query != _currentQuery) {
-          _performSearch();
-        }
-      });
-    });
+    _loadRecentSearches();
   }
 
   void _setupAnimations() {
@@ -102,6 +93,8 @@ class _SearchPageState extends State<SearchPage>
         }
         _isLoading = false;
       });
+
+      _saveRecentSearch(query);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -113,8 +106,9 @@ class _SearchPageState extends State<SearchPage>
   }
 
   Future<void> _loadMoreResults() async {
-    if (_isLoadingMore || _isLoading || !_hasMore || _currentQuery.isEmpty)
+    if (_isLoadingMore || _isLoading || !_hasMore || _currentQuery.isEmpty) {
       return;
+    }
 
     setState(() {
       _isLoadingMore = true;
@@ -153,6 +147,31 @@ class _SearchPageState extends State<SearchPage>
     }
   }
 
+  Future<void> _saveRecentSearch(String query) async {
+    final prefs = await SharedPreferences.getInstance();
+    _recentSearches.remove(query);
+    _recentSearches.insert(0, query);
+    if (_recentSearches.length > 5) {
+      _recentSearches = _recentSearches.sublist(0, 5);
+    }
+    await prefs.setStringList('recent_searches', _recentSearches);
+  }
+
+  Future<void> _loadRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _recentSearches = prefs.getStringList('recent_searches') ?? [];
+    });
+  }
+
+  Future<void> _clearRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('recent_searches');
+    setState(() {
+      _recentSearches = [];
+    });
+  }
+
   @override
   void dispose() {
     _debounceTimer?.cancel();
@@ -177,11 +196,13 @@ class _SearchPageState extends State<SearchPage>
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.only(
+                    left: 16.0, top: 16.0, right: 16.0, bottom: 8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         CupertinoButton(
                           padding: EdgeInsets.zero,
@@ -194,19 +215,23 @@ class _SearchPageState extends State<SearchPage>
                         const Text(
                           AppStrings.discover,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.secondaryColor,
                           ),
                         ),
+                        const SizedBox(width: 48),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      AppStrings.newsFromAllAroundTheWorld,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[600],
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        AppStrings.newsFromAllAroundTheWorld,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -242,26 +267,48 @@ class _SearchPageState extends State<SearchPage>
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey[300]!,
-            blurRadius: 8,
-            offset: const Offset(0, 1),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey[300]!,
+                blurRadius: 8,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: AppStrings.search,
-          hintStyle: TextStyle(color: Colors.grey[400]),
-          prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.search,
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
+                  ),
+                  textInputAction: TextInputAction.done,
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.search, color: Colors.grey[400]),
+                onPressed: () {
+                  final query = _searchController.text.trim();
+                  if (query.isNotEmpty) {
+                    FocusScope.of(context).unfocus(); // Close keyboard
+                    _performSearch();
+                  }
+                },
+              ),
+              if (_searchController.text.isNotEmpty)
+                IconButton(
                   icon: Icon(Icons.clear, color: Colors.grey[400]),
                   onPressed: () {
                     _searchController.clear();
@@ -272,15 +319,38 @@ class _SearchPageState extends State<SearchPage>
                       _hasMore = true;
                     });
                   },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                ),
+            ],
+          ),
         ),
-        onSubmitted: (_) => _performSearch(),
-        textInputAction: TextInputAction.search,
-      ),
+
+        // Recent Searches Section remains the same
+        if (_searchController.text.isEmpty && _recentSearches.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Your recent searches',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+              TextButton(
+                onPressed: _clearRecentSearches,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.secondaryColor,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                child: const Text('Clear'),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 
@@ -298,7 +368,7 @@ class _SearchPageState extends State<SearchPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
                   _error!,
                   style: TextStyle(color: Colors.grey[600]),
@@ -329,6 +399,44 @@ class _SearchPageState extends State<SearchPage>
       return const SliverFillRemaining(
         child: Center(
           child: Text('No articles found. Try a different search term.'),
+        ),
+      );
+    }
+
+    if (_articles.isEmpty && _currentQuery.isEmpty) {
+      return SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final query = _recentSearches[index];
+            return Column(
+              children: [
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  leading:
+                      const Icon(Icons.history, color: AppTheme.secondaryColor),
+                  title: Text(
+                    query,
+                    style: TextStyle(
+                      color: Colors.grey[800],
+                      fontSize: 15,
+                    ),
+                  ),
+                  onTap: () {
+                    _searchController.text = query;
+                    _performSearch();
+                  },
+                ),
+                if (index < _recentSearches.length - 1)
+                  Divider(
+                    height: 1,
+                    color: Colors.grey[300],
+                    indent: 4,
+                    endIndent: 4,
+                  ),
+              ],
+            );
+          },
+          childCount: _recentSearches.length,
         ),
       );
     }

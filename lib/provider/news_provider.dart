@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smallnews/data/data.dart';
-import 'package:smallnews/repository/respository.dart';
+import 'package:smallnews/services/services.dart';
 
 class NewsProvider extends ChangeNotifier {
   List<Article> _articles = [];
