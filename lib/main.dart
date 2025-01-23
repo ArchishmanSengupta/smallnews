@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:smallnews/provider/provider.dart';
+import 'package:smallnews/theme/app_theme.dart';
 import 'package:smallnews/ui/ui.dart';
 
 void main() async {
@@ -20,8 +21,8 @@ class MyApp extends StatelessWidget {
           title: 'smallnews',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
-            fontFamily: 'Graphik',
-          ),
+              fontFamily: 'Graphik',
+              scaffoldBackgroundColor: AppTheme.backgroundColor),
           home: const HomePage(),
         ));
   }
