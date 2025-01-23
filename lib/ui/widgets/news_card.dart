@@ -80,7 +80,7 @@ class NewsCard extends StatelessWidget {
                     Text(
                       article.title,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -93,7 +93,7 @@ class NewsCard extends StatelessWidget {
                         style: Theme.of(context)
                             .textTheme
                             .bodyMedium
-                            ?.copyWith(fontSize: 12),
+                            ?.copyWith(fontSize: 10),
                       ),
                     ],
                     const SizedBox(height: 8),

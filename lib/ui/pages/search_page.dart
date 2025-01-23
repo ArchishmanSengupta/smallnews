@@ -205,6 +205,7 @@ class _SearchPageState extends State<SearchPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         CupertinoButton(
                           padding: EdgeInsets.zero,
@@ -217,19 +218,23 @@ class _SearchPageState extends State<SearchPage>
                         const Text(
                           AppStrings.discover,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.secondaryColor,
                           ),
                         ),
+                        const SizedBox(width: 48),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      AppStrings.newsFromAllAroundTheWorld,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[600],
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        AppStrings.newsFromAllAroundTheWorld,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -321,7 +326,7 @@ class _SearchPageState extends State<SearchPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
                   _error!,
                   style: TextStyle(color: Colors.grey[600]),
