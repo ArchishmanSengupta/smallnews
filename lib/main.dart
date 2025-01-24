@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smallnews/data/strings/strings.dart';
-import 'package:smallnews/provider/provider.dart';
-import 'package:smallnews/theme/app_theme.dart';
-import 'package:smallnews/ui/ui.dart';
+import 'package:smallnews/controller/provider/provider.dart';
+import 'package:smallnews/view/theme/app_theme.dart';
+import 'package:smallnews/view/view.dart';
 
 void main() async {
   runApp(const MyApp());
