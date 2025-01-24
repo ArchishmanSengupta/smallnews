@@ -24,6 +24,9 @@ class NewsListState {
   /// Indicates whether the end of the news list has been reached.
   final bool hasReachedEnd;
 
+  /// Indicates the total number of results.
+  final int totalResults;
+
   /// Creates a [NewsListState] instance.
   ///
   /// [newsResponse] is the response containing the news articles.
@@ -41,6 +44,7 @@ class NewsListState {
     this.error,
     this.scrollController,
     this.hasReachedEnd = false,
+    this.totalResults = 0,
   });
 
   /// Gets the list of news articles.
@@ -64,6 +68,7 @@ class NewsListState {
     bool? isLoading,
     String? error,
     bool? hasReachedEnd,
+    int? totalResults,
   }) {
     return NewsListState(
       newsResponse: newsResponse ?? this.newsResponse,
@@ -71,6 +76,7 @@ class NewsListState {
       isLoading: isLoading ?? this.isLoading,
       error: error,
       hasReachedEnd: hasReachedEnd ?? this.hasReachedEnd,
+      totalResults: totalResults ?? this.totalResults,
     );
   }
 }

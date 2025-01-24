@@ -4,21 +4,15 @@ import 'package:smallnews/controller/controller.dart';
 import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/view.dart';
 
-/// The main home page of the application.
-///
-/// This widget displays a tabbed interface for different news categories.
 class HomePage extends StatefulWidget {
-  /// Creates a [HomePage] widget.
   const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-/// The state for the [HomePage] widget.
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
-  /// The controller for the tab bar.
   late TabController _tabController;
 
   @override
@@ -35,9 +29,6 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  /// Builds the app bar for the home page.
-  ///
-  /// Returns a [PreferredSizeWidget] that represents the app bar.
   PreferredSizeWidget _buildAppbar() {
     return AppBar(
       backgroundColor: AppTheme.backgroundColor,
@@ -75,9 +66,6 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  /// Builds the body of the home page.
-  ///
-  /// Returns a [Widget] that represents the body of the home page.
   Widget _buildBody() {
     final newsProvider = Provider.of<NewsProvider>(context);
     return Column(
@@ -121,12 +109,6 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  /// Builds the news list for a specific category.
-  ///
-  /// [category] is the category of the news articles.
-  /// [categoryState] is the state of the news articles for the category.
-  /// [onLoadMore] is a callback function to load more articles.
-  /// Returns a [Widget] that represents the news list for the category.
   Widget _buildCategoryNewsList(String category, NewsListState categoryState,
       {required VoidCallback onLoadMore}) {
     if (categoryState.error != null) {
@@ -145,7 +127,16 @@ class _HomePageState extends State<HomePage>
                     Provider.of<NewsProvider>(context, listen: false);
                 await newsProvider.initCategory(category);
               },
-              child: const Text(AppStrings.retry),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[900],
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Retry'),
             ),
           ],
         ),
