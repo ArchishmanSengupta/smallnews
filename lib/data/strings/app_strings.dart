@@ -11,4 +11,6 @@ class AppStrings {
       'News from all around the world';
 
   static const String discover = 'Discover';
+
+  static const String retry = 'Retry';
 }

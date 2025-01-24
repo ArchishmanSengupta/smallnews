@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:smallnews/controller/controller.dart';
 import 'package:smallnews/data/data.dart';
-import 'package:smallnews/controller/provider/news_provider.dart';
-import 'package:smallnews/view/theme/app_theme.dart';
 import 'package:smallnews/view/view.dart';
-import 'package:smallnews/view/util/util.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,66 +21,48 @@ class _HomePageState extends State<HomePage>
     _tabController = TabController(length: categories.length, vsync: this);
   }
 
-  Widget _buildAppbar() {
-    return GestureDetector(
-      onTap: () => {
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const SearchPage(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              const begin = Offset(1.0, 0.0);
-              const end = Offset.zero;
-              final tween = Tween(begin: begin, end: end);
-              final offsetAnimation = animation.drive(tween);
-              return SlideTransition(
-                position: offsetAnimation,
-                child: child,
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 300),
-          ),
-        )
-      },
-      child: const Padding(
-        padding: EdgeInsets.only(top: 20.0),
-        child: Icon(Icons.search, color: Colors.black),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundColor,
-        leading: _buildAppbar(),
-        centerTitle: true,
-        title: Padding(
-          padding: const EdgeInsets.only(top: 20.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Image.asset(
-                  AppImages.logo,
-                  height: 30,
-                  width: 30,
-                ),
-              ),
-              const Text(
-                AppStrings.appName,
-                style: TextStyle(
-                    fontSize: 16, fontFamily: 'Graphik', letterSpacing: 1),
-              ),
-            ],
-          ),
+      appBar: _buildAppbar(),
+      body: _buildBody(),
+    );
+  }
+
+  PreferredSizeWidget _buildAppbar() {
+    return AppBar(
+      backgroundColor: AppTheme.backgroundColor,
+      leading: GestureDetector(
+        onTap: () => {
+          Navigator.push(context, AppRoutes.createRoute(const SearchPage()))
+        },
+        child: const Padding(
+          padding: EdgeInsets.only(top: 20.0),
+          child: Icon(Icons.search, color: Colors.black),
         ),
       ),
-      body: _buildBody(),
+      centerTitle: true,
+      title: Padding(
+        padding: const EdgeInsets.only(top: 20.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset(
+                AppImages.logo,
+                height: 30,
+                width: 30,
+              ),
+            ),
+            const Text(
+              AppStrings.appName,
+              style: TextStyle(
+                  fontSize: 16, fontFamily: 'Graphik', letterSpacing: 1),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -147,7 +127,7 @@ class _HomePageState extends State<HomePage>
                     Provider.of<NewsProvider>(context, listen: false);
                 await newsProvider.initCategory(category);
               },
-              child: const Text('Retry'),
+              child: const Text(AppStrings.retry),
             ),
           ],
         ),
