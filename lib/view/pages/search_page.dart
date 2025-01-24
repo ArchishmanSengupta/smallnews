@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smallnews/data/data.dart';
 import 'package:smallnews/controller/services/services.dart';
+import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/theme/app_theme.dart';
 import 'package:smallnews/view/widgets/widgets.dart';
 
@@ -471,3 +471,299 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 }
+
+// import 'package:flutter/cupertino.dart';
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+// import 'package:smallnews/controller/controller.dart';
+// import 'package:smallnews/data/data.dart';
+// import 'package:smallnews/view/theme/app_theme.dart';
+// import 'package:smallnews/view/widgets/widgets.dart';
+
+// class SearchPage extends StatelessWidget {
+//   const SearchPage({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return ChangeNotifierProvider(
+//       create: (context) => NewsSearchController(),
+//       child: Consumer<NewsSearchController>(
+//         builder: (context, controller, child) {
+//           return Theme(
+//             data: Theme.of(context).copyWith(
+//               scaffoldBackgroundColor: Colors.grey[50],
+//               appBarTheme: AppBarTheme(
+//                 backgroundColor: Colors.grey[50],
+//                 elevation: 0,
+//               ),
+//             ),
+//             child: Scaffold(
+//               body: SafeArea(
+//                 child: Column(
+//                   children: [
+//                     Padding(
+//                       padding: const EdgeInsets.only(
+//                           left: 16.0, top: 16.0, right: 16.0, bottom: 8.0),
+//                       child: Column(
+//                         crossAxisAlignment: CrossAxisAlignment.start,
+//                         children: [
+//                           Row(
+//                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                             children: [
+//                               CupertinoButton(
+//                                 padding: EdgeInsets.zero,
+//                                 onPressed: () => Navigator.of(context).pop(),
+//                                 child: const Icon(
+//                                   CupertinoIcons.back,
+//                                   color: AppTheme.secondaryColor,
+//                                 ),
+//                               ),
+//                               const Text(
+//                                 AppStrings.discover,
+//                                 style: TextStyle(
+//                                   fontSize: 24,
+//                                   fontWeight: FontWeight.bold,
+//                                   color: AppTheme.secondaryColor,
+//                                 ),
+//                               ),
+//                               const SizedBox(width: 48),
+//                             ],
+//                           ),
+//                           const SizedBox(height: 8),
+//                           Align(
+//                             alignment: Alignment.center,
+//                             child: Text(
+//                               AppStrings.newsFromAllAroundTheWorld,
+//                               style: TextStyle(
+//                                 fontSize: 12,
+//                                 color: Colors.grey[600],
+//                               ),
+//                             ),
+//                           ),
+//                           const SizedBox(height: 24),
+//                           _buildSearchBar(context, controller),
+//                         ],
+//                       ),
+//                     ),
+//                     Expanded(
+//                       child: CustomScrollView(
+//                         controller: ScrollController(),
+//                         slivers: [
+//                           SliverPadding(
+//                             padding:
+//                                 const EdgeInsets.symmetric(horizontal: 24.0),
+//                             sliver: _buildContent(context, controller),
+//                           ),
+//                         ],
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
+
+//   Widget _buildSearchBar(
+//       BuildContext context, NewsSearchController controller) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Container(
+//           decoration: BoxDecoration(
+//             color: Colors.white,
+//             borderRadius: BorderRadius.circular(16),
+//             boxShadow: [
+//               BoxShadow(
+//                 color: Colors.grey[300]!,
+//                 blurRadius: 8,
+//                 offset: const Offset(0, 1),
+//               ),
+//             ],
+//           ),
+//           child: Row(
+//             children: [
+//               Expanded(
+//                 child: TextField(
+//                   controller: controller.searchController,
+//                   decoration: InputDecoration(
+//                     hintText: AppStrings.search,
+//                     hintStyle: TextStyle(color: Colors.grey[400]),
+//                     border: InputBorder.none,
+//                     contentPadding: const EdgeInsets.symmetric(
+//                         horizontal: 16, vertical: 16),
+//                   ),
+//                   textInputAction: TextInputAction.done,
+//                   onSubmitted: (_) => controller.performSearch(),
+//                 ),
+//               ),
+//               IconButton(
+//                 icon: Icon(Icons.search, color: Colors.grey[400]),
+//                 onPressed: controller.performSearch,
+//               ),
+//               if (controller.searchController.text.isNotEmpty)
+//                 IconButton(
+//                   icon: Icon(Icons.clear, color: Colors.grey[400]),
+//                   onPressed: () {
+//                     controller.clearSearch();
+//                   },
+//                 ),
+//             ],
+//           ),
+//         ),
+//         if (controller.searchController.text.isEmpty &&
+//             controller.recentSearches.isNotEmpty) ...[
+//           const SizedBox(height: 24),
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               Text(
+//                 'Your recent searches',
+//                 style: TextStyle(
+//                   fontSize: 16,
+//                   fontWeight: FontWeight.w600,
+//                   color: Colors.grey[800],
+//                 ),
+//               ),
+//               TextButton(
+//                 onPressed: () {
+//                   controller.clearRecentSearches();
+//                 },
+//                 style: TextButton.styleFrom(
+//                   foregroundColor: AppTheme.secondaryColor,
+//                   padding:
+//                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+//                 ),
+//                 child: const Text('Clear'),
+//               ),
+//             ],
+//           ),
+//         ],
+//       ],
+//     );
+//   }
+
+//   Widget _buildContent(BuildContext context, NewsSearchController controller) {
+//     if (controller.isLoading) {
+//       return const SliverFillRemaining(
+//         child: Center(child: ShimmerLoading()),
+//       );
+//     }
+
+//     if (controller.error != null) {
+//       return SliverFillRemaining(
+//         child: Center(
+//           child: Column(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               Padding(
+//                 padding: const EdgeInsets.symmetric(horizontal: 8),
+//                 child: Text(
+//                   controller.error!,
+//                   style: TextStyle(color: Colors.grey[600]),
+//                   textAlign: TextAlign.center,
+//                 ),
+//               ),
+//               const SizedBox(height: 16),
+//               ElevatedButton(
+//                 onPressed: controller.performSearch,
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: Colors.grey[900],
+//                   foregroundColor: Colors.white,
+//                   padding:
+//                       const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+//                   shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(12),
+//                   ),
+//                 ),
+//                 child: const Text('Retry'),
+//               ),
+//             ],
+//           ),
+//         ),
+//       );
+//     }
+
+//     if (controller.articles.isEmpty &&
+//         controller.searchController.text.isNotEmpty) {
+//       return const SliverFillRemaining(
+//         child: Center(
+//           child: Text('No articles found. Try a different search term.'),
+//         ),
+//       );
+//     }
+
+//     if (controller.articles.isEmpty) {
+//       return SliverList(
+//         delegate: SliverChildBuilderDelegate(
+//           (context, index) {
+//             final query = controller.recentSearches[index];
+//             return Column(
+//               children: [
+//                 ListTile(
+//                   contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+//                   leading:
+//                       const Icon(Icons.history, color: AppTheme.secondaryColor),
+//                   title: Text(
+//                     query,
+//                     style: TextStyle(
+//                       color: Colors.grey[800],
+//                       fontSize: 15,
+//                     ),
+//                   ),
+//                   onTap: () {
+//                     controller.searchController.text = query;
+//                     controller.performSearch();
+//                   },
+//                 ),
+//                 if (index < controller.recentSearches.length - 1)
+//                   Divider(
+//                     height: 1,
+//                     color: Colors.grey[300],
+//                     indent: 4,
+//                     endIndent: 4,
+//                   ),
+//               ],
+//             );
+//           },
+//           childCount: controller.recentSearches.length,
+//         ),
+//       );
+//     }
+
+//     return SliverList(
+//       delegate: SliverChildBuilderDelegate(
+//         (context, index) {
+//           if (index == controller.articles.length) {
+//             return controller.isLoadingMore
+//                 ? Center(
+//                     child: Padding(
+//                       padding: const EdgeInsets.all(16.0),
+//                       child: CircularProgressIndicator(
+//                         valueColor:
+//                             AlwaysStoppedAnimation<Color>(Colors.grey[800]!),
+//                       ),
+//                     ),
+//                   )
+//                 : const SizedBox.shrink();
+//           }
+
+//           final article = controller.articles[index];
+//           return Padding(
+//             padding: const EdgeInsets.only(bottom: 16.0),
+//             child: AnimatedOpacity(
+//               duration: const Duration(milliseconds: 300),
+//               opacity: 1.0,
+//               child: NewsCard(article: article),
+//             ),
+//           );
+//         },
+//         childCount:
+//             controller.articles.length + (controller.isLoadingMore ? 1 : 0),
+//       ),
+//     );
+//   }
+// }

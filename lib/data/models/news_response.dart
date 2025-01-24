@@ -26,4 +26,16 @@ class NewsResponse {
           .toList(),
     );
   }
+
+  NewsResponse copyWith({
+    String? status,
+    int? totalResults,
+    List<Article>? articles,
+  }) {
+    return NewsResponse(
+      status: status ?? this.status,
+      totalResults: totalResults ?? this.totalResults,
+      articles: articles ?? this.articles,
+    );
+  }
 }

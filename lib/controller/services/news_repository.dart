@@ -37,6 +37,10 @@ class NewsRepository {
       'apiKey': apiKey,
     }).toString();
 
+    print('----------------------------------------\n\n\n\n\n');
+    print(url);
+    print('----------------------------------------\n\n\n\n\n');
+
     try {
       final response = await http.get(Uri.parse(url));
 
@@ -72,6 +76,10 @@ class NewsRepository {
       'pageSize': '20',
       'apiKey': apiKey,
     }).toString();
+
+    print('----------------------------------------\n\n\n\n\n');
+    print(url);
+    print('----------------------------------------\n\n\n\n\n');
 
     try {
       final response = await http.get(Uri.parse(url));
