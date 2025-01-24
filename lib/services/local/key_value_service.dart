@@ -4,7 +4,6 @@ import 'package:smallnews/services/services.dart';
 class KeyValueStorageService {
   static const _recentSearchesKey = 'recentSearches';
 
-  /// Instance of key-value storage base class
   static final _keyValueStorage = KeyValueStorageBase();
 
   static Future<List<Article>> getRecentSearches() async {
