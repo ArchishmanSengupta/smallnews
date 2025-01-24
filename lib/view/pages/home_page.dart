@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smallnews/controller/controller.dart';
@@ -93,7 +94,7 @@ class _HomePageState extends State<HomePage>
             children: categories.map((category) {
               final categoryState = newsProvider.getState(category);
               if (categoryState == null) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: CupertinoActivityIndicator());
               }
               return _buildCategoryNewsList(
                 category,
@@ -175,7 +176,7 @@ class _HomePageState extends State<HomePage>
 
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 32.0),
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(child: CupertinoActivityIndicator()),
             );
           }
 
