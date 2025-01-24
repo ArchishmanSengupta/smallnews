@@ -1,24 +1,9 @@
-/// A page that displays the details of a news article.
-///
-/// The [NewsDetailsPage] widget is a stateful widget that takes an [Article]
-/// object as a required parameter. It displays the article's image, source,
-/// title, and publication date, and provides a back button to navigate back
-/// to the previous screen.
-///
-/// The page consists of a [Scaffold] with a [Column] containing a [Stack]
-/// that displays the article's image with a gradient overlay, and a [WebViewArticle]
-/// that loads the article's URL.
-///
-/// The [NewsDetailsPage] widget uses the following packages:
-/// - `flutter/material.dart` for UI components.
-/// - `intl/intl.dart` for date formatting.
-/// - `smallnews/data/data.dart` for the [Article] model.
-/// - `smallnews/ui/ui.dart` for the [WebViewArticle] widget.
 library;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/view.dart';
 
@@ -35,39 +20,45 @@ class NewsDetailsPage extends StatefulWidget {
 }
 
 class _NewsDetailsPageState extends State<NewsDetailsPage> {
+  Widget _buildImage(String imageUrl) {
+    final isEmpty = imageUrl.isEmpty;
 
-   ClipRRect _buildImage(String imageUrl) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Hero(
-        tag: 'news_image_$imageUrl',
-        child: CachedNetworkImage(
-          imageUrl: imageUrl,
-          height: 300,
-          cacheKey: imageUrl,
-          fit: BoxFit.cover,
-          progressIndicatorBuilder: (context, child, loadingProgress) {
-            return Container(
-              height: 155,
-              width: 130,
-              color: Colors.grey[300],
-              child: Center(
-                child: LinearProgressIndicator(
-                  value: loadingProgress.progress,
-                ),
+    return Hero(
+      tag: 'news_image_${widget.article.url}',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: isEmpty
+            ? _buildErrorContainer()
+            : CachedNetworkImage(
+                imageUrl: imageUrl,
+                height: 300,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                progressIndicatorBuilder: (context, url, progress) =>
+                    _buildShimmerEffect(),
+                errorWidget: (context, url, error) => _buildErrorContainer(),
               ),
-            );
-          },
-          errorWidget: (context, error, stackTrace) {
-            return Container(
-              height: 155,
-              width: 130,
-              color: Colors.grey[300],
-              child: const Icon(Icons.error_outline),
-            );
-          },
-        ),
       ),
+    );
+  }
+
+  Widget _buildShimmerEffect() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[850]!,
+      highlightColor: Colors.grey[800]!,
+      child: Container(
+        height: 300,
+        width: double.infinity,
+        color: Colors.grey[900],
+      ),
+    );
+  }
+
+  Widget _buildErrorContainer() {
+    return Container(
+      height: 300,
+      width: double.infinity,
+      color: Colors.black,
     );
   }
 
@@ -78,9 +69,9 @@ class _NewsDetailsPageState extends State<NewsDetailsPage> {
         children: [
           Stack(
             children: [
-              _buildImage(widget.article.urlToImage??''), 
+              _buildImage(widget.article.urlToImage ?? ''),
               Positioned.fill(
-                child: Container(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -90,6 +81,7 @@ class _NewsDetailsPageState extends State<NewsDetailsPage> {
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
+                      stops: const [0.0, 0.3, 0.6],
                     ),
                   ),
                 ),
@@ -140,7 +132,7 @@ class _NewsDetailsPageState extends State<NewsDetailsPage> {
                 ),
               ),
               Positioned(
-                top: 50,
+                top: MediaQuery.of(context).padding.top + 10,
                 left: 20,
                 child: CircleAvatar(
                   backgroundColor: Colors.black.withOpacity(0.5),

@@ -120,51 +120,11 @@ class _WebViewArticleState extends State<WebViewArticle> {
       );
   }
 
-  /// Retries loading the web page.
-  void _retryLoading() {
-    setState(() {
-      _errorMessage = null;
-      _isLoading = true;
-    });
-    _webViewController.loadRequest(Uri.parse(widget.url));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          /// The web view widget.
-          ClipRRect(
-            child: WebViewWidget(controller: _webViewController),
-          ),
-
-          /// A loading indicator displayed while the web view is loading.
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
-
-          /// An error message and retry button displayed if the web view fails to load.
-          if (_errorMessage != null)
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Error loading webpage: $_errorMessage',
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _retryLoading,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-        ],
+      body: ClipRRect(
+        child: WebViewWidget(controller: _webViewController),
       ),
     );
   }

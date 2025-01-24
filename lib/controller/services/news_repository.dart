@@ -5,11 +5,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:smallnews/data/models/models.dart';
-import 'package:smallnews/env/env.dart';
+// import 'package:smallnews/env/env.dart';
 
 /// A repository class that handles fetching news data from the News API.
 class NewsRepository {
-  static String get apiKey => Env.newsApiKey;
+  // static String get apiKey => Env.newsApiKey;
+  static String get apiKey => '744bdda3cd364d35aa089200edacda7d';
 
   static const String authority = 'newsapi.org';
 
@@ -39,7 +40,7 @@ class NewsRepository {
       } else if (response.statusCode == 429) {
         throw Exception('Rate Limited 😢');
       } else {
-        throw Exception('Failed to load news: ${response.statusCode}');
+        throw Exception('Rate Limited 😢');
       }
     } catch (e) {
       throw Exception('$e');
@@ -67,7 +68,7 @@ class NewsRepository {
       } else if (response.statusCode == 429) {
         throw Exception('Rate Limited 😢');
       } else {
-        throw Exception('Failed to load news: ${response.statusCode}');
+        throw Exception('Rate Limited 😢');
       }
     } catch (e) {
       throw Exception('$e');
@@ -93,7 +94,7 @@ class NewsRepository {
       } else if (response.statusCode == 429) {
         throw Exception('Rate Limited 😢');
       } else {
-        throw Exception('Failed to load news: ${response.statusCode}');
+        throw Exception('Rate Limited 😢');
       }
     } catch (e) {
       throw Exception('$e');
