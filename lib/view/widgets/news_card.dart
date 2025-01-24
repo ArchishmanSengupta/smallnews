@@ -1,45 +1,58 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/view.dart';
-import 'package:smallnews/view/util/util.dart';
 
-/// A widget that displays a news article in a card format.
-///
-/// The [NewsCard] shows the article's image, title, author, publication time, and source.
-/// It also provides a tappable interface to navigate to the article's details page.
-class NewsCard extends StatelessWidget {
-  /// The [Article] instance representing the article to display.
+class NewsCard extends StatefulWidget {
   final Article article;
-
-  /// A flag indicating whether the card is in a loading state.
-  ///
-  /// If `true`, a shimmer loading animation will be displayed instead of the article content.
   final bool isLoading;
 
-  /// Creates a [NewsCard] widget.
-  ///
-  /// The [article] parameter must not be null. The [isLoading] parameter defaults to `false`.
   const NewsCard({super.key, required this.article, this.isLoading = false});
 
-  /// Builds the main content of the article, including the image, title, and metadata.
+  @override
+  State<NewsCard> createState() => _NewsCardState();
+}
+
+class _NewsCardState extends State<NewsCard> {
+  bool _imageFailed = false;
+
+  void _handleImageError() {
+    if (!_imageFailed) {
+      setState(() {
+        _imageFailed = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: widget.isLoading
+          ? const ShimmerLoading()
+          : _buildArticleContent(context),
+    );
+  }
+
   Widget _buildArticleContent(BuildContext context) {
     return Column(
       children: [
         GestureDetector(
-          // Navigates to the [NewsDetailsPage] when the article card is tapped.
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => NewsDetailsPage(article: article),
+              builder: (context) => NewsDetailsPage(article: widget.article),
             ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (article.urlToImage != null && article.urlToImage!.isNotEmpty) ... {
-                _buildImage(article.urlToImage!),
-              },
+              if (widget.article.urlToImage != null &&
+                  widget.article.urlToImage!.isNotEmpty &&
+                  !_imageFailed)
+                _buildImage(widget.article.urlToImage!),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -48,16 +61,16 @@ class NewsCard extends StatelessWidget {
                     _buildAuthorAndTime(context),
                     const SizedBox(height: 8),
                     Text(
-                      article.title,
+                      widget.article.title,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (article.description.isNotEmpty) ...[
+                    if (widget.article.description.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
-                        article.description,
+                        widget.article.description,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context)
@@ -81,7 +94,7 @@ class NewsCard extends StatelessWidget {
     );
   }
 
-  ClipRRect _buildImage(String imageUrl) {
+  Widget _buildImage(String imageUrl) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Hero(
@@ -93,32 +106,31 @@ class NewsCard extends StatelessWidget {
           memCacheWidth: 3 * 130,
           cacheKey: imageUrl,
           fit: BoxFit.cover,
-          progressIndicatorBuilder: (context, child, loadingProgress) {
-            return Container(
+          fadeInDuration: const Duration(milliseconds: 500),
+          fadeInCurve: Curves.easeIn,
+          progressIndicatorBuilder: (context, url, progress) =>
+              Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
               height: 155,
               width: 130,
-              color: Colors.grey[300],
-              child: Center(
-                child: LinearProgressIndicator(
-                  value: loadingProgress.progress,
-                ),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(12),
               ),
-            );
-          },
-          errorWidget: (context, error, stackTrace) {
-            return Container(
-              height: 155,
-              width: 130,
-              color: Colors.grey[300],
-              child: const Icon(Icons.error_outline),
-            );
+            ),
+          ),
+          errorWidget: (context, url, error) {
+            SchedulerBinding.instance
+                .addPostFrameCallback((_) => _handleImageError());
+            return const SizedBox.shrink();
           },
         ),
       ),
     );
   }
 
-  /// Builds a row displaying the author's name and the publication time.
   Widget _buildAuthorAndTime(BuildContext context) {
     return Row(
       children: [
@@ -131,21 +143,20 @@ class NewsCard extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            article.author ?? '',
+            widget.article.author ?? '',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 8),
             overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(width: 8),
         Text(
-          formatTimeAgo(article.publishedAt),
+          formatTimeAgo(widget.article.publishedAt),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 8),
         ),
       ],
     );
   }
 
-  /// Builds a chip-like widget displaying the article's source name.
   Widget _buildSource(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -154,24 +165,12 @@ class NewsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        article.source.name,
+        widget.article.source.name,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontSize: 8,
               color: Theme.of(context).primaryColor,
             ),
       ),
-    );
-  }
-
-  /// Builds the overall widget tree for the [NewsCard].
-  ///
-  /// Displays a shimmer loading animation if [isLoading] is `true`, or the article
-  /// content otherwise.
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: isLoading ? const ShimmerLoading() : _buildArticleContent(context),
     );
   }
 }

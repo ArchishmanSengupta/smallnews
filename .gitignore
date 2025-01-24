@@ -43,3 +43,32 @@ app.*.map.json
 /android/app/release
 
 .env
+
+# iOS
+ios/Flutter/Flutter.podspec
+ios/Flutter/Flutter.framework
+ios/Flutter/App.framework
+ios/Flutter/Generated.xcconfig
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/Flutter/flutter_export_environment.sh
+ios/ServiceDefinitions.json
+
+# Xcode & CocoaPods
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/.last_build_id
+ios/Flutter/Flutter.xcframework/
+ios/Flutter/Flutter.xcscheme
+ios/Runner.xcworkspace/contents.xcworkspacedata
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcworkspace/xcuserdata/
+
+# Build/IDE files
+ios/DerivedData/
+ios/.generated/
+ios/build/
+ios/*.mode1v3
+ios/*.pbxuser

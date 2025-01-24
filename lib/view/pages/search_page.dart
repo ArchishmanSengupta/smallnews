@@ -23,9 +23,9 @@ class _SearchPageState extends State<SearchPage>
   final ScrollController _scrollController = ScrollController();
 
   bool _isLoading = false;
-  bool _isLoadingMore = false;
   String _currentQuery = '';
   int _currentPage = 1;
+  int _totalResults = 0;
   List<Article> _articles = [];
   String? _error;
   bool _hasMore = true;
@@ -57,11 +57,13 @@ class _SearchPageState extends State<SearchPage>
 
   void _setupScrollListener() {
     _scrollController.addListener(() {
-      if (!_isLoading &&
-          !_isLoadingMore &&
-          _hasMore &&
-          _scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent - 200) {
+      if (_isLoading || !_hasMore) return;
+
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      const scrollThreshold = 100;
+
+      if (maxScroll - currentScroll <= scrollThreshold) {
         _loadMoreResults();
       }
     });
@@ -85,13 +87,9 @@ class _SearchPageState extends State<SearchPage>
       if (!mounted) return;
 
       setState(() {
-        if (results.articles.isEmpty) {
-          _error = 'No articles found for this search term.';
-          _hasMore = false;
-        } else {
-          _articles = results.articles;
-          _hasMore = results.articles.length >= 20;
-        }
+        _totalResults = results.totalResults;
+        _articles = results.articles;
+        _hasMore = _articles.length < _totalResults;
         _isLoading = false;
       });
 
@@ -107,44 +105,28 @@ class _SearchPageState extends State<SearchPage>
   }
 
   Future<void> _loadMoreResults() async {
-    if (_isLoadingMore || _isLoading || !_hasMore || _currentQuery.isEmpty) {
-      return;
-    }
+    if (_isLoading || !_hasMore || _currentQuery.isEmpty) return;
 
-    setState(() {
-      _isLoadingMore = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final nextPage = _currentPage + 1;
       final results = await NewsRepository.fetchNews(_currentQuery, nextPage);
-
       if (!mounted) return;
 
       setState(() {
-        if (results.articles.isNotEmpty) {
-          _articles.addAll(results.articles);
-          _currentPage = nextPage;
-          _hasMore = results.articles.length >= 20;
-        } else {
-          _hasMore = false;
-        }
-        _isLoadingMore = false;
+        _articles.addAll(results.articles);
+        _currentPage = nextPage;
+        _totalResults = results.totalResults;
+        _hasMore = _articles.length < _totalResults;
+        _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _isLoadingMore = false;
-        _hasMore = false;
+        _error = e.toString().replaceAll('Exception:', '').trim();
+        _isLoading = false;
       });
-
-      final errorMsg = e.toString().replaceAll('Exception:', '').trim();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMsg),
-          duration: const Duration(seconds: 2),
-        ),
-      );
     }
   }
 
@@ -159,7 +141,7 @@ class _SearchPageState extends State<SearchPage>
 
     setState(() {
       _recentSearchResults[query] = articles;
-      _isExpanded[query] = false; // Initialize as collapsed
+      _isExpanded[query] = false;
     });
   }
 
@@ -174,7 +156,7 @@ class _SearchPageState extends State<SearchPage>
       final results = await NewsRepository.fetchNews(query, 1);
       setState(() {
         _recentSearchResults[query] = results.articles;
-        _isExpanded[query] = false; // Initialize as collapsed
+        _isExpanded[query] = false;
       });
     }
   }
@@ -187,14 +169,6 @@ class _SearchPageState extends State<SearchPage>
       _recentSearchResults.clear();
       _isExpanded.clear();
     });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _scrollController.dispose();
-    _animationController.dispose();
-    super.dispose();
   }
 
   @override
@@ -371,38 +345,22 @@ class _SearchPageState extends State<SearchPage>
   }
 
   Widget _buildContent() {
-    if (_isLoading) {
+    if (_isLoading && _articles.isEmpty) {
       return const SliverFillRemaining(
         child: Center(child: ShimmerLoading()),
       );
     }
 
-    if (_error != null) {
+    if (_error != null && _articles.isEmpty) {
       return SliverFillRemaining(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  _error!,
-                  style: TextStyle(color: Colors.grey[600]),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+              Text(_error!),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _performSearch,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[900],
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
                 child: const Text('Retry'),
               ),
             ],
@@ -413,64 +371,14 @@ class _SearchPageState extends State<SearchPage>
 
     if (_articles.isEmpty && _currentQuery.isNotEmpty) {
       return const SliverFillRemaining(
-        child: Center(
-          child: Text('No articles found. Try a different search term.'),
-        ),
+        child: Center(child: Text('No articles found')),
       );
     }
 
-    if (_articles.isEmpty && _currentQuery.isEmpty) {
+    if (_articles.isEmpty) {
       return SliverList(
         delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final query = _recentSearches[index];
-            final articles = _recentSearchResults[query] ?? [];
-            final isExpanded = _isExpanded[query] ?? false;
-
-            return Column(
-              children: [
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                  leading:
-                      const Icon(Icons.history, color: AppTheme.secondaryColor),
-                  title: Text(
-                    query,
-                    style: TextStyle(
-                      color: Colors.grey[800],
-                      fontSize: 15,
-                    ),
-                  ),
-                  trailing: IconButton(
-                    icon: Icon(
-                      isExpanded ? Icons.expand_less : Icons.expand_more,
-                      color: AppTheme.secondaryColor,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isExpanded[query] = !isExpanded;
-                      });
-                    },
-                  ),
-                  onTap: () {
-                    _searchController.text = query;
-                    _performSearch();
-                  },
-                ),
-                if (isExpanded && articles.isNotEmpty)
-                  ...articles.map((article) => Padding(
-                        padding: const EdgeInsets.only(left: 40.0, right: 16.0),
-                        child: NewsCard(article: article),
-                      )),
-                if (index < _recentSearches.length - 1)
-                  Divider(
-                    height: 1,
-                    color: Colors.grey[300],
-                    indent: 4,
-                    endIndent: 4,
-                  ),
-              ],
-            );
-          },
+          (context, index) => _buildRecentSearchItem(index),
           childCount: _recentSearches.length,
         ),
       );
@@ -479,32 +387,78 @@ class _SearchPageState extends State<SearchPage>
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) {
-          if (index == _articles.length) {
-            return _isLoadingMore
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: CircularProgressIndicator(
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.grey[800]!),
-                      ),
-                    ),
-                  )
+          if (index >= _articles.length) {
+            if (_error != null) {
+              return _buildErrorIndicator();
+            }
+            return _hasMore
+                ? _buildLoadingIndicator()
                 : const SizedBox.shrink();
           }
-
-          final article = _articles[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: 1.0,
-              child: NewsCard(article: article),
-            ),
+            child: NewsCard(article: _articles[index]),
           );
         },
-        childCount: _articles.length + (_isLoadingMore ? 1 : 0),
+        childCount: _articles.length + (_hasMore ? 1 : 0),
       ),
     );
+  }
+
+  Widget _buildRecentSearchItem(int index) {
+    final query = _recentSearches[index];
+    final articles = _recentSearchResults[query] ?? [];
+    final isExpanded = _isExpanded[query] ?? false;
+
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.history, color: AppTheme.secondaryColor),
+          title: Text(query),
+          trailing: IconButton(
+            icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+            onPressed: () => setState(() => _isExpanded[query] = !isExpanded),
+          ),
+          onTap: () {
+            _searchController.text = query;
+            _performSearch();
+          },
+        ),
+        if (isExpanded && articles.isNotEmpty)
+          ...articles.map((article) => NewsCard(article: article)),
+        if (index < _recentSearches.length - 1)
+          Divider(color: Colors.grey[300]),
+      ],
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 32.0),
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  Widget _buildErrorIndicator() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Text(_error!),
+          ElevatedButton(
+            onPressed: _loadMoreResults,
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    _animationController.dispose();
+    super.dispose();
   }
 }
