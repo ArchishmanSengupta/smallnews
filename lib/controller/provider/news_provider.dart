@@ -25,25 +25,50 @@ class NewsProvider extends ChangeNotifier {
   }
 
   Future<void> initCategory(String category) async {
-    _categoryStates[category] = NewsListState(isLoading: true);
+    _categoryStates[category] = NewsListState(
+      articles: [],
+      currentPage: 0,
+      totalResults: 0,
+      isLoading: true,
+      scrollController: ScrollController(),
+    );
     notifyListeners();
 
     try {
       final resp = await NewsRepository.fetchNewsByCategory(category, 1);
       final scrollController = ScrollController();
+
       scrollController.addListener(() {
-        if (scrollController.position.pixels >=
-            scrollController.position.maxScrollExtent) {
+        final state = _categoryStates[category];
+        if (state == null) return;
+
+        final maxScroll = scrollController.position.maxScrollExtent;
+        final currentScroll = scrollController.position.pixels;
+        const scrollThreshold = 100; // pixels before bottom to trigger load
+
+        if (maxScroll - currentScroll <= scrollThreshold &&
+            !state.isLoading &&
+            !state.hasReachedEnd) {
           loadMoreArticles(category);
         }
       });
+
       _categoryStates[category] = NewsListState(
-        newsResponse: resp,
-        hasReachedEnd: resp.articles.length < kArticlesPerPage,
+        articles: resp.articles,
+        currentPage: 1,
+        totalResults: resp.totalResults,
+        isLoading: false,
         scrollController: scrollController,
       );
     } catch (e) {
-      _categoryStates[category] = NewsListState(error: e.toString());
+      _categoryStates[category] = NewsListState(
+        articles: [],
+        currentPage: 0,
+        totalResults: 0,
+        isLoading: false,
+        error: e.toString(),
+        scrollController: ScrollController(),
+      );
     }
     notifyListeners();
   }
@@ -63,11 +88,13 @@ class NewsProvider extends ChangeNotifier {
         currentState.currentPage + 1,
       );
 
+      final newArticles = [...currentState.articles, ...resp.articles];
+
       _categoryStates[category] = currentState.copyWith(
-        newsResponse: resp,
+        articles: newArticles,
         currentPage: currentState.currentPage + 1,
+        totalResults: resp.totalResults,
         isLoading: false,
-        hasReachedEnd: resp.articles.length < kArticlesPerPage,
       );
     } catch (e) {
       _categoryStates[category] = currentState.copyWith(

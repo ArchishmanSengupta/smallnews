@@ -30,10 +30,6 @@ class NewsRepository {
       'apiKey': apiKey,
     }).toString();
 
-    print('----------------------------------------\n\n\n\n\n');
-    print(url);
-    print('----------------------------------------\n\n\n\n\n');
-
     try {
       final response = await http.get(Uri.parse(url));
 
@@ -41,7 +37,7 @@ class NewsRepository {
         final Map<String, dynamic> data = json.decode(response.body);
         return NewsResponse.fromJson(data);
       } else if (response.statusCode == 429) {
-        throw Exception('Too many requests 😢');
+        throw Exception('Rate Limited 😢');
       } else {
         throw Exception('Failed to load news: ${response.statusCode}');
       }
@@ -62,10 +58,6 @@ class NewsRepository {
       'apiKey': apiKey,
     }).toString();
 
-    print('----------------------------------------\n\n\n\n\n');
-    print(url);
-    print('----------------------------------------\n\n\n\n\n');
-
     try {
       final response = await http.get(Uri.parse(url));
 
@@ -73,7 +65,7 @@ class NewsRepository {
         final Map<String, dynamic> data = json.decode(response.body);
         return NewsResponse.fromJson(data);
       } else if (response.statusCode == 429) {
-        throw Exception('Too many requests 😢');
+        throw Exception('Rate Limited 😢');
       } else {
         throw Exception('Failed to load news: ${response.statusCode}');
       }
@@ -99,7 +91,7 @@ class NewsRepository {
         final Map<String, dynamic> data = json.decode(response.body);
         return NewsResponse.fromJson(data);
       } else if (response.statusCode == 429) {
-        throw Exception('Too many requests 😢');
+        throw Exception('Rate Limited 😢');
       } else {
         throw Exception('Failed to load news: ${response.statusCode}');
       }
