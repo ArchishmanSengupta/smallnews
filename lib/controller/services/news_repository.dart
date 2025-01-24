@@ -10,16 +10,9 @@ import 'package:smallnews/env/env.dart';
 /// A repository class that handles fetching news data from the News API.
 class NewsRepository {
   static String get apiKey => Env.newsApiKey;
+
   static const String authority = 'newsapi.org';
 
-  /// Fetches news articles based on a search query and page number.
-  ///
-  /// The [query] parameter specifies the search term to look for in the news articles.
-  /// The [page] parameter specifies the page number of the results to fetch.
-  ///
-  /// Returns a [NewsResponse] containing the news articles.
-  ///
-  /// Throws an [Exception] if the network request fails or if the response status code is not 200.
   static Future<NewsResponse> fetchNews(String query, int page) async {
     const String path = '/v2/everything';
     final DateTime now = DateTime.now();
@@ -44,7 +37,7 @@ class NewsRepository {
         final Map<String, dynamic> data = json.decode(response.body);
         return NewsResponse.fromJson(data);
       } else if (response.statusCode == 429) {
-        throw Exception('Too many requests 😢');
+        throw Exception('Rate Limited 😢');
       } else {
         throw Exception('Failed to load news: ${response.statusCode}');
       }
@@ -53,14 +46,6 @@ class NewsRepository {
     }
   }
 
-  /// Fetches news articles based on a category and page number.
-  ///
-  /// The [category] parameter specifies the category of news to fetch (e.g., business, entertainment, health).
-  /// The [page] parameter specifies the page number of the results to fetch.
-  ///
-  /// Returns a [NewsResponse] containing the news articles.
-  ///
-  /// Throws an [Exception] if the network request fails or if the response status code is not 200.
   static Future<NewsResponse> fetchNewsByCategory(
       String category, int page) async {
     const String path = '/v2/top-headlines';
@@ -80,7 +65,7 @@ class NewsRepository {
         final Map<String, dynamic> data = json.decode(response.body);
         return NewsResponse.fromJson(data);
       } else if (response.statusCode == 429) {
-        throw Exception('Too many requests 😢');
+        throw Exception('Rate Limited 😢');
       } else {
         throw Exception('Failed to load news: ${response.statusCode}');
       }
@@ -89,13 +74,6 @@ class NewsRepository {
     }
   }
 
-  /// Fetches top headlines for a specific country.
-  ///
-  /// The [page] parameter specifies the page number of the results to fetch.
-  ///
-  /// Returns a [NewsResponse] containing the news articles.
-  ///
-  /// Throws an [Exception] if the network request fails or if the response status code is not 200.
   static Future<NewsResponse> fetchTopHeadlines(int page) async {
     const String path = '/v2/top-headlines';
 
@@ -113,7 +91,7 @@ class NewsRepository {
         final Map<String, dynamic> data = json.decode(response.body);
         return NewsResponse.fromJson(data);
       } else if (response.statusCode == 429) {
-        throw Exception('Too many requests 😢');
+        throw Exception('Rate Limited 😢');
       } else {
         throw Exception('Failed to load news: ${response.statusCode}');
       }

@@ -11,6 +11,7 @@
 /// * Disable debug banner
 /// * Custom theme settings including background color and font family
 /// * Homepage as the initial route
+
 library;
 
 import 'package:flutter/material.dart';

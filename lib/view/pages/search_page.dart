@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smallnews/data/data.dart';
 import 'package:smallnews/controller/services/services.dart';
+import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/theme/app_theme.dart';
 import 'package:smallnews/view/widgets/widgets.dart';
 
@@ -31,6 +31,8 @@ class _SearchPageState extends State<SearchPage>
   bool _hasMore = true;
 
   List<String> _recentSearches = [];
+  final Map<String, List<Article>> _recentSearchResults = {};
+  final Map<String, bool> _isExpanded = {};
 
   @override
   void initState() {
@@ -93,7 +95,7 @@ class _SearchPageState extends State<SearchPage>
         _isLoading = false;
       });
 
-      _saveRecentSearch(query);
+      _saveRecentSearch(query, results.articles);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -146,7 +148,7 @@ class _SearchPageState extends State<SearchPage>
     }
   }
 
-  Future<void> _saveRecentSearch(String query) async {
+  Future<void> _saveRecentSearch(String query, List<Article> articles) async {
     final prefs = await SharedPreferences.getInstance();
     _recentSearches.remove(query);
     _recentSearches.insert(0, query);
@@ -154,6 +156,11 @@ class _SearchPageState extends State<SearchPage>
       _recentSearches = _recentSearches.sublist(0, 5);
     }
     await prefs.setStringList('recent_searches', _recentSearches);
+
+    setState(() {
+      _recentSearchResults[query] = articles;
+      _isExpanded[query] = false; // Initialize as collapsed
+    });
   }
 
   Future<void> _loadRecentSearches() async {
@@ -161,6 +168,15 @@ class _SearchPageState extends State<SearchPage>
     setState(() {
       _recentSearches = prefs.getStringList('recent_searches') ?? [];
     });
+
+    // Load recent search results
+    for (var query in _recentSearches) {
+      final results = await NewsRepository.fetchNews(query, 1);
+      setState(() {
+        _recentSearchResults[query] = results.articles;
+        _isExpanded[query] = false; // Initialize as collapsed
+      });
+    }
   }
 
   Future<void> _clearRecentSearches() async {
@@ -168,6 +184,8 @@ class _SearchPageState extends State<SearchPage>
     await prefs.remove('recent_searches');
     setState(() {
       _recentSearches = [];
+      _recentSearchResults.clear();
+      _isExpanded.clear();
     });
   }
 
@@ -322,7 +340,7 @@ class _SearchPageState extends State<SearchPage>
           ),
         ),
 
-        // Recent Searches Section remains the same
+        // Recent Searches Section
         if (_searchController.text.isEmpty && _recentSearches.isNotEmpty) ...[
           const SizedBox(height: 24),
           Row(
@@ -406,6 +424,9 @@ class _SearchPageState extends State<SearchPage>
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final query = _recentSearches[index];
+            final articles = _recentSearchResults[query] ?? [];
+            final isExpanded = _isExpanded[query] ?? false;
+
             return Column(
               children: [
                 ListTile(
@@ -419,11 +440,27 @@ class _SearchPageState extends State<SearchPage>
                       fontSize: 15,
                     ),
                   ),
+                  trailing: IconButton(
+                    icon: Icon(
+                      isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: AppTheme.secondaryColor,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isExpanded[query] = !isExpanded;
+                      });
+                    },
+                  ),
                   onTap: () {
                     _searchController.text = query;
                     _performSearch();
                   },
                 ),
+                if (isExpanded && articles.isNotEmpty)
+                  ...articles.map((article) => Padding(
+                        padding: const EdgeInsets.only(left: 40.0, right: 16.0),
+                        child: NewsCard(article: article),
+                      )),
                 if (index < _recentSearches.length - 1)
                   Divider(
                     height: 1,
