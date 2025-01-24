@@ -16,6 +16,7 @@
 /// - `smallnews/ui/ui.dart` for the [WebViewArticle] widget.
 library;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:smallnews/data/data.dart';
@@ -34,6 +35,42 @@ class NewsDetailsPage extends StatefulWidget {
 }
 
 class _NewsDetailsPageState extends State<NewsDetailsPage> {
+
+   ClipRRect _buildImage(String imageUrl) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Hero(
+        tag: 'news_image_$imageUrl',
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          height: 300,
+          cacheKey: imageUrl,
+          fit: BoxFit.cover,
+          progressIndicatorBuilder: (context, child, loadingProgress) {
+            return Container(
+              height: 155,
+              width: 130,
+              color: Colors.grey[300],
+              child: Center(
+                child: LinearProgressIndicator(
+                  value: loadingProgress.progress,
+                ),
+              ),
+            );
+          },
+          errorWidget: (context, error, stackTrace) {
+            return Container(
+              height: 155,
+              width: 130,
+              color: Colors.grey[300],
+              child: const Icon(Icons.error_outline),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,14 +78,7 @@ class _NewsDetailsPageState extends State<NewsDetailsPage> {
         children: [
           Stack(
             children: [
-              ClipRRect(
-                child: Image.network(
-                  widget.article.urlToImage ?? '',
-                  height: 300,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
+              _buildImage(widget.article.urlToImage??''), 
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(

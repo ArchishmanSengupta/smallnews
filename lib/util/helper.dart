@@ -14,6 +14,12 @@ extension StringExtension on String {
   }
 }
 
+extension MapExtension on Map<String, dynamic> {
+  bool hasKeyAndNotNull(String key) {
+    return containsKey(key) && this[key] != null;
+  }
+}
+
 /// Formats the given date string into a relative "time ago" string.
 ///
 /// Returns a string like "2d ago", "5h ago", or "15m ago" based on the difference
@@ -46,3 +52,5 @@ final List<String> categories = [
   'entertainment',
   'general',
 ];
+
+const int kArticlesPerPage = 20;

@@ -1,65 +1,99 @@
 import 'package:flutter/material.dart';
 import 'package:smallnews/data/data.dart';
 import 'package:smallnews/services/services.dart';
+import 'package:smallnews/util/util.dart';
 
 class NewsProvider extends ChangeNotifier {
-  List<Article> _articles = [];
-  bool _isLoading = false;
-  String _error = '';
-  String _currentQuery = '';
-  int _currentPage = 1;
-  bool _hasReachedEnd = false;
-  int _totalResults = 0;
+  static final NewsProvider _instance = NewsProvider._internal();
 
-  List<Article> get articles => _articles;
-  bool get isLoading => _isLoading;
-  String get error => _error;
-  bool get hasReachedEnd => _hasReachedEnd;
+  factory NewsProvider() {
+    return _instance;
+  }
 
-  Future<void> searchNews(String query) async {
-    if (query.isEmpty) return;
+  final Map<String, NewsListState> _categoryStates = {};
 
-    _isLoading = true;
-    _error = '';
-    _currentQuery = query;
-    _currentPage = 1;
-    _articles = [];
-    notifyListeners();
+  NewsProvider._internal() {
+    init();
+  }
 
-    try {
-      final response = await NewsRepository.fetchNews(query, _currentPage);
-      _articles = response.articles;
-      _totalResults = response.totalResults;
-      _hasReachedEnd = _articles.length >= _totalResults;
-      _error = '';
-    } catch (e) {
-      _error = e.toString();
-      _articles = [];
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+  Future<void> init() async {
+    if (_categoryStates.isNotEmpty) return;
+
+    for (String category in categories) {
+      await initCategory(category);
     }
   }
 
-  Future<void> loadMore() async {
-    if (_isLoading || _hasReachedEnd) return;
-
-    _isLoading = true;
+  Future<void> initCategory(String category) async {
+    _categoryStates[category] = NewsListState(isLoading: true);
     notifyListeners();
 
     try {
-      final nextPage = _currentPage + 1;
-      final response = await NewsRepository.fetchNews(_currentQuery, nextPage);
+      final resp = await NewsRepository.fetchNewsByCategory(category, 1);
+      final scollController = ScrollController();
+      scollController.addListener(() {
+        if (scollController.position.pixels >=
+            scollController.position.maxScrollExtent) {
+          loadMoreArticles(category);
+        }
+      });
+      _categoryStates[category] = NewsListState(
+        newsResponse: resp,
+        hasReachedEnd: resp.articles.length < kArticlesPerPage,
+        scrollController: scollController,
+      );
 
-      _articles = [..._articles, ...response.articles];
-      _currentPage = nextPage;
-      _hasReachedEnd = _articles.length >= _totalResults;
-      _error = '';
     } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      _categoryStates[category] = NewsListState(error: e.toString());
     }
+    notifyListeners();
+  }
+
+  Future<void> loadMoreArticles(String category) async {
+    final currentState = _categoryStates[category];
+    if (currentState == null || currentState.isLoading || currentState.hasReachedEnd) return;
+
+    _categoryStates[category] = currentState.copyWith(isLoading: true);
+    notifyListeners();
+
+    try {
+      final resp = await NewsRepository.fetchNewsByCategory(
+        category,
+        currentState.currentPage + 1,
+      );
+
+      _categoryStates[category] = currentState.copyWith(
+        newsResponse: resp,
+        currentPage: currentState.currentPage + 1,
+        isLoading: false,
+        hasReachedEnd: resp.articles.length < kArticlesPerPage,
+      );
+    } catch (e) {
+      _categoryStates[category] = currentState.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+    notifyListeners();
+  }
+
+  NewsListState? getState(String category) => _categoryStates[category];
+
+  void refresh(String category) {
+    _categoryStates.remove(category);
+    notifyListeners();
+    initCategory(category);
+  }
+
+  void refreshAll() {
+    _categoryStates.clear();
+    notifyListeners();
+    init();
+  }
+
+  @override
+  void dispose() {
+    _categoryStates.clear();
+    super.dispose();
   }
 }

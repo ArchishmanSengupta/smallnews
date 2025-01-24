@@ -5,7 +5,13 @@ class NewsResponse {
   final int totalResults;
   final List<Article> articles;
 
-  NewsResponse({
+  static const NewsResponse empty = NewsResponse(
+    status: 'ok',
+    totalResults: 0,
+    articles: [],
+  );
+
+  const NewsResponse({
     required this.status,
     required this.totalResults,
     required this.articles,
