@@ -2,14 +2,14 @@ library;
 
 import 'dart:convert';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:smallnews/data/models/models.dart';
+import 'package:smallnews/env/env.dart';
 
 /// A repository class that handles fetching news data from the News API.
 class NewsRepository {
-  static final String apiKey = dotenv.env['NEWS_API_KEY'] ?? '';
+  static String get apiKey => Env.newsApiKey;
   static const String authority = 'newsapi.org';
 
   /// Fetches news articles based on a search query and page number.

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:smallnews/data/data.dart';
 import 'package:smallnews/ui/ui.dart';
@@ -36,40 +37,9 @@ class NewsCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (article.urlToImage != null && article.urlToImage!.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    article.urlToImage!,
-                    height: 155,
-                    width: 130,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        height: 155,
-                        width: 130,
-                        color: Colors.grey[300],
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 155,
-                        width: 130,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.error_outline),
-                      );
-                    },
-                  ),
-                ),
+              if (article.urlToImage != null && article.urlToImage!.isNotEmpty) ... {
+                _buildImage(article.urlToImage!),
+              },
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -108,6 +78,43 @@ class NewsCard extends StatelessWidget {
         const Divider(),
         const SizedBox(height: 8),
       ],
+    );
+  }
+
+  ClipRRect _buildImage(String imageUrl) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Hero(
+        tag: 'news_image_$imageUrl',
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          height: 155,
+          width: 130,
+          memCacheWidth: 3 * 130,
+          cacheKey: imageUrl,
+          fit: BoxFit.cover,
+          progressIndicatorBuilder: (context, child, loadingProgress) {
+            return Container(
+              height: 155,
+              width: 130,
+              color: Colors.grey[300],
+              child: Center(
+                child: LinearProgressIndicator(
+                  value: loadingProgress.progress,
+                ),
+              ),
+            );
+          },
+          errorWidget: (context, error, stackTrace) {
+            return Container(
+              height: 155,
+              width: 130,
+              color: Colors.grey[300],
+              child: const Icon(Icons.error_outline),
+            );
+          },
+        ),
+      ),
     );
   }
 

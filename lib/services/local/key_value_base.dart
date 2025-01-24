@@ -51,7 +51,7 @@ class KeyValueStorageBase {
         return _sharedPrefs!.getDouble(key) as T?;
       }
       return _sharedPrefs!.get(key) as T?;
-    } on Exception catch (ex) {
+    } on Exception {
       return null;
     }
   }
