@@ -13,4 +13,8 @@ class AppStrings {
   static const String discover = 'Discover';
 
   static const String retry = 'Retry';
+
+  static const noMoreArticlesTo = 'No more articles to load';
+
+  static const youveReachedTheEnd = 'You\'ve reached the end!';
 }

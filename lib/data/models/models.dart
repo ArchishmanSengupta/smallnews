@@ -1,4 +1,4 @@
-export 'article.dart';
-export 'news_list_state.dart';
-export 'news_response.dart';
-export 'source.dart';
+export 'article_model.dart';
+export 'news_list_model.dart';
+export 'news_response_model.dart';
+export 'source_model.dart';

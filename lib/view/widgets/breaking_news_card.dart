@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:smallnews/data/data.dart';
 
 class BreakingNewsCard extends StatelessWidget {
-  final Article article;
+  final ArticleModel article;
 
   const BreakingNewsCard({super.key, required this.article});
 

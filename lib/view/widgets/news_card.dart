@@ -6,7 +6,7 @@ import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/view.dart';
 
 class NewsCard extends StatefulWidget {
-  final Article article;
+  final ArticleModel article;
   final bool isLoading;
 
   const NewsCard({super.key, required this.article, this.isLoading = false});

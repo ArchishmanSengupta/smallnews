@@ -1,5 +1,3 @@
-library;
-
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -38,11 +36,8 @@ class _WebViewArticleState extends State<WebViewArticle> {
   /// The controller for the web view.
   late final WebViewController _webViewController;
 
-  /// Indicates whether the web view is currently loading.
-  bool _isLoading = true;
-
-  /// An optional error message to be displayed if the web view fails to load.
-  String? _errorMessage;
+  /// Shows a toast message when an error occurs.
+  void _showErrorToast(String message) {}
 
   @override
   void initState() {
@@ -59,17 +54,12 @@ class _WebViewArticleState extends State<WebViewArticle> {
         NavigationDelegate(
           /// Called when the page starts loading.
           onPageStarted: (String url) {
-            setState(() {
-              _isLoading = true;
-              _errorMessage = null;
-            });
+            setState(() {});
           },
 
           /// Called when the page finishes loading.
           onPageFinished: (String url) {
-            setState(() {
-              _isLoading = false;
-            });
+            setState(() {});
           },
 
           /// Called when a navigation request is made.
@@ -80,8 +70,7 @@ class _WebViewArticleState extends State<WebViewArticle> {
           /// Called when an error occurs during navigation.
           onWebResourceError: (WebResourceError error) {
             setState(() {
-              _isLoading = false;
-              _errorMessage = error.description;
+              _showErrorToast(error.description);
             });
           },
         ),

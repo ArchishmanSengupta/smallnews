@@ -5,6 +5,8 @@ import 'package:smallnews/controller/controller.dart';
 import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/view.dart';
 
+import 'components/home/home.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -25,45 +27,8 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _buildAppbar(),
+      appBar: AppBarWidget.build(context),
       body: _buildBody(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppbar() {
-    return AppBar(
-      backgroundColor: AppTheme.backgroundColor,
-      leading: GestureDetector(
-        onTap: () {
-          Navigator.push(context, AppRoutes.createRoute(const SearchPage()));
-        },
-        child: const Padding(
-          padding: EdgeInsets.only(top: 20.0),
-          child: Icon(Icons.search, color: Colors.black),
-        ),
-      ),
-      centerTitle: true,
-      title: Padding(
-        padding: const EdgeInsets.only(top: 20.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(
-                AppImages.logo,
-                height: 30,
-                width: 30,
-              ),
-            ),
-            const Text(
-              AppStrings.appName,
-              style: TextStyle(
-                  fontSize: 16, fontFamily: 'Graphik', letterSpacing: 1),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -109,7 +74,7 @@ class _HomePageState extends State<HomePage>
 
   Widget _buildCategoryNewsList(
     String category,
-    NewsListState categoryState,
+    NewsListModel categoryState,
   ) {
     if (categoryState.error != null && categoryState.articles.isEmpty) {
       return Center(
@@ -146,6 +111,10 @@ class _HomePageState extends State<HomePage>
             ? categoryState.articles.length
             : categoryState.articles.length + 1,
         itemBuilder: (context, index) {
+          if (index == categoryState.totalResults - 1 &&
+              categoryState.totalResults > 0) {
+            return const EndOfListIndicator();
+          }
           if (index >= categoryState.articles.length) {
             if (categoryState.error != null) {
               return Padding(

@@ -3,7 +3,6 @@
 /// This class contains static constants for various colors used throughout
 /// the app, such as primary and secondary colors, background and surface
 /// colors, text colors, and divider color.
-library;
 
 import 'package:flutter/material.dart';
 

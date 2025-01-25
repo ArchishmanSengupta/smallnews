@@ -1,20 +1,17 @@
-library;
-
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:smallnews/data/models/models.dart';
-// import 'package:smallnews/env/env.dart';
+import 'package:smallnews/env/env.dart';
 
 /// A repository class that handles fetching news data from the News API.
-class NewsRepository {
-  // static String get apiKey => Env.newsApiKey;
-  static String get apiKey => '744bdda3cd364d35aa089200edacda7d';
+class NewsService {
+  static String get apiKey => Env.newsApiKey;
 
   static const String authority = 'newsapi.org';
 
-  static Future<NewsResponse> fetchNews(String query, int page) async {
+  static Future<NewsResponseModel> fetchNews(String query, int page) async {
     const String path = '/v2/everything';
     final DateTime now = DateTime.now();
 
@@ -36,7 +33,7 @@ class NewsRepository {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        return NewsResponse.fromJson(data);
+        return NewsResponseModel.fromJson(data);
       } else if (response.statusCode == 429) {
         throw Exception('Rate Limited 😢');
       } else {
@@ -47,7 +44,7 @@ class NewsRepository {
     }
   }
 
-  static Future<NewsResponse> fetchNewsByCategory(
+  static Future<NewsResponseModel> fetchNewsByCategory(
       String category, int page) async {
     const String path = '/v2/top-headlines';
 
@@ -64,7 +61,7 @@ class NewsRepository {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        return NewsResponse.fromJson(data);
+        return NewsResponseModel.fromJson(data);
       } else if (response.statusCode == 429) {
         throw Exception('Rate Limited 😢');
       } else {
@@ -75,7 +72,7 @@ class NewsRepository {
     }
   }
 
-  static Future<NewsResponse> fetchTopHeadlines(int page) async {
+  static Future<NewsResponseModel> fetchTopHeadlines(int page) async {
     const String path = '/v2/top-headlines';
 
     final String url = Uri.https(authority, path, {
@@ -90,7 +87,7 @@ class NewsRepository {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        return NewsResponse.fromJson(data);
+        return NewsResponseModel.fromJson(data);
       } else if (response.statusCode == 429) {
         throw Exception('Rate Limited 😢');
       } else {
