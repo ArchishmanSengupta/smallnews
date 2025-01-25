@@ -105,6 +105,9 @@ class _HomePageState extends State<HomePage>
     return RefreshIndicator(
       onRefresh: () async => context.read<NewsProvider>().refresh(category),
       child: ListView.builder(
+        /// This preserves the current state for the scroll position
+        /// this helps in better user interaction for the user
+        key: PageStorageKey<String>(category),
         controller: categoryState.scrollController,
         physics: const BouncingScrollPhysics(),
         itemCount: categoryState.hasReachedEnd
