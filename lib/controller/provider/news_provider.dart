@@ -44,7 +44,7 @@ class NewsProvider extends ChangeNotifier {
 
         final maxScroll = scrollController.position.maxScrollExtent;
         final currentScroll = scrollController.position.pixels;
-        const scrollThreshold = 100; // pixels before bottom to trigger load
+        const scrollThreshold = 100;
 
         if (maxScroll - currentScroll <= scrollThreshold &&
             !state.isLoading &&
