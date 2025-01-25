@@ -1,5 +1,3 @@
-library;
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -8,7 +6,7 @@ import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/view.dart';
 
 class NewsDetailsPage extends StatefulWidget {
-  final Article article;
+  final ArticleModel article;
 
   const NewsDetailsPage({
     super.key,
@@ -25,20 +23,16 @@ class _NewsDetailsPageState extends State<NewsDetailsPage> {
 
     return Hero(
       tag: 'news_image_${widget.article.url}',
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: isEmpty
-            ? _buildErrorContainer()
-            : CachedNetworkImage(
-                imageUrl: imageUrl,
-                height: 300,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                progressIndicatorBuilder: (context, url, progress) =>
-                    _buildShimmerEffect(),
-                errorWidget: (context, url, error) => _buildErrorContainer(),
-              ),
-      ),
+      child: isEmpty
+          ? _buildErrorContainer()
+          : CachedNetworkImage(
+              imageUrl: imageUrl,
+              height: 300,
+              fit: BoxFit.cover,
+              progressIndicatorBuilder: (context, url, progress) =>
+                  _buildShimmerEffect(),
+              errorWidget: (context, url, error) => _buildErrorContainer(),
+            ),
     );
   }
 

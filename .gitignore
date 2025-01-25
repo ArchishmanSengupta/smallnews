@@ -72,3 +72,5 @@ ios/.generated/
 ios/build/
 ios/*.mode1v3
 ios/*.pbxuser
+
+.dart_tool/

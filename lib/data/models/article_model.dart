@@ -1,7 +1,7 @@
 import 'package:smallnews/data/models/models.dart';
 
-class Article {
-  final Source source;
+class ArticleModel {
+  final SourceModel source;
   final String? author;
   final String title;
   final String description;
@@ -10,7 +10,7 @@ class Article {
   final String publishedAt;
   final String content;
 
-  Article({
+  ArticleModel({
     required this.source,
     this.author,
     required this.title,
@@ -21,9 +21,9 @@ class Article {
     required this.content,
   });
 
-  factory Article.fromJson(Map<String, dynamic> json) {
-    return Article(
-      source: Source.fromJson(json['source']),
+  factory ArticleModel.fromJson(Map<String, dynamic> json) {
+    return ArticleModel(
+      source: SourceModel.fromJson(json['source']),
       author: json['author'],
       title: json['title'] ?? '',
       description: json['description'] ?? '',
@@ -46,8 +46,8 @@ class Article {
     };
   }
 
-  Article copyWith({
-    Source? source,
+  ArticleModel copyWith({
+    SourceModel? source,
     String? author,
     String? title,
     String? description,
@@ -56,7 +56,7 @@ class Article {
     String? publishedAt,
     String? content,
   }) {
-    return Article(
+    return ArticleModel(
       source: source ?? this.source,
       author: author ?? this.author,
       title: title ?? this.title,

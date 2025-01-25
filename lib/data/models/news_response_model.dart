@@ -1,38 +1,38 @@
 import 'package:smallnews/data/models/models.dart';
 
-class NewsResponse {
+class NewsResponseModel {
   final String status;
   final int totalResults;
-  final List<Article> articles;
+  final List<ArticleModel> articles;
 
-  static const NewsResponse empty = NewsResponse(
+  static const NewsResponseModel empty = NewsResponseModel(
     status: 'ok',
     totalResults: 0,
     articles: [],
   );
 
-  const NewsResponse({
+  const NewsResponseModel({
     required this.status,
     required this.totalResults,
     required this.articles,
   });
 
-  factory NewsResponse.fromJson(Map<String, dynamic> json) {
-    return NewsResponse(
+  factory NewsResponseModel.fromJson(Map<String, dynamic> json) {
+    return NewsResponseModel(
       status: json['status'],
       totalResults: json['totalResults'],
       articles: (json['articles'] as List)
-          .map((article) => Article.fromJson(article))
+          .map((article) => ArticleModel.fromJson(article))
           .toList(),
     );
   }
 
-  NewsResponse copyWith({
+  NewsResponseModel copyWith({
     String? status,
     int? totalResults,
-    List<Article>? articles,
+    List<ArticleModel>? articles,
   }) {
-    return NewsResponse(
+    return NewsResponseModel(
       status: status ?? this.status,
       totalResults: totalResults ?? this.totalResults,
       articles: articles ?? this.articles,

@@ -1,2 +1,2 @@
-export 'local/local.dart';
-export 'news_repository.dart';
+export 'storage_engine/storage_engine.dart';
+export 'news_service.dart';

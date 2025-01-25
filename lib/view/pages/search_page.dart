@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:smallnews/controller/provider/provider.dart';
 import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/theme/app_theme.dart';
@@ -14,14 +15,14 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage>
     with SingleTickerProviderStateMixin {
-  late final NewsSearchController _controller;
+  late final NewsSearchProvider _controller;
   late AnimationController _animationController;
   late Animation<double> _searchBarAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = NewsSearchController();
+    _controller = context.read<NewsSearchProvider>();
     _setupAnimations();
   }
 
@@ -154,38 +155,28 @@ class _SearchPageState extends State<SearchPage>
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 16),
                   ),
+                  onSubmitted: (input) => onSearch(),
                   textInputAction: TextInputAction.done,
                 ),
               ),
               IconButton(
                 icon: Icon(Icons.search, color: Colors.grey[400]),
-                onPressed: () {
-                  final query = _controller.newsSearchController.text.trim();
-                  if (query.isNotEmpty) {
-                    FocusScope.of(context).unfocus();
-                    _controller.performSearch();
-                  }
-                },
+                onPressed: onSearch,
               ),
               if (_controller.newsSearchController.text.isNotEmpty)
                 IconButton(
                   icon: Icon(Icons.clear, color: Colors.grey[400]),
                   onPressed: () {
-                    _controller.newsSearchController.clear();
-                    _controller.articles.value = [];
-                    _controller.error.value = null;
-                    _controller.currentQuery = '';
-                    _controller.hasMore.value = true;
+                    _controller.clearSearch();
                   },
                 ),
             ],
           ),
         ),
-        ValueListenableBuilder<List<String>>(
-          valueListenable: _controller.recentSearchesNotifier,
-          builder: (context, recentSearches, _) {
+        Consumer<NewsSearchProvider>(
+          builder: (context, controller, _) {
             if (_controller.newsSearchController.text.isEmpty &&
-                recentSearches.isNotEmpty) {
+                controller.recentSearches.isNotEmpty) {
               return Column(
                 children: [
                   const SizedBox(height: 24),
@@ -221,91 +212,88 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
+  void onSearch() {
+    final query = _controller.newsSearchController.text.trim();
+    if (query.isNotEmpty) {
+      FocusScope.of(context).unfocus();
+      _controller.performSearch();
+    }
+  }
+
   Widget _buildContent() {
-    return ValueListenableBuilder<bool>(
-      valueListenable: _controller.isLoading,
-      builder: (context, isLoading, _) {
-        if (isLoading && _controller.articles.value.isEmpty) {
+    return Consumer<NewsSearchProvider>(
+      builder: (context, controller, _) {
+        if (controller.isLoading && controller.articles.isEmpty) {
           return const SliverFillRemaining(
             child: Center(child: ShimmerLoading()),
           );
         }
 
-        return ValueListenableBuilder<String?>(
-          valueListenable: _controller.error,
-          builder: (context, error, _) {
-            if (error != null && _controller.articles.value.isEmpty) {
-              return SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(error),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[900],
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: _controller.performSearch,
-                        child: const Text('Retry'),
+        if (controller.error != null && controller.articles.isEmpty) {
+          return SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(controller.error!),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[900],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
+                    ),
+                    onPressed: _controller.performSearch,
+                    child: const Text('Retry'),
                   ),
-                ),
-              );
-            }
+                ],
+              ),
+            ),
+          );
+        }
 
-            return _buildArticleList();
-          },
-        );
+        return _buildArticleList();
       },
     );
   }
 
   Widget _buildArticleList() {
-    return ValueListenableBuilder<List<Article>>(
-      valueListenable: _controller.articles,
-      builder: (context, articles, _) {
-        if (articles.isEmpty && _controller.currentQuery.isNotEmpty) {
+    return Consumer<NewsSearchProvider>(
+      builder: (context, controller, _) {
+        if (controller.articles.isEmpty && controller.currentQuery.isNotEmpty) {
           return const SliverFillRemaining(
             child: Center(child: Text('No articles found')),
           );
         }
 
-        if (articles.isEmpty) {
-          return ValueListenableBuilder<List<String>>(
-            valueListenable: _controller.recentSearchesNotifier,
-            builder: (context, recentSearches, _) {
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildRecentSearchItem(index),
-                  childCount: recentSearches.length,
-                ),
-              );
-            },
+        if (controller.articles.isEmpty) {
+          return SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _buildRecentSearchItem(index),
+              childCount: controller.recentSearches.length,
+            ),
           );
         }
 
         return SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
-              if (index >= articles.length) {
-                return _controller.hasMore.value
+              if (index >= controller.articles.length) {
+                return controller.hasMore
                     ? _buildLoadingIndicator()
                     : const SizedBox.shrink();
               }
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
-                child: NewsCard(article: articles[index]),
+                child: NewsCard(article: controller.articles[index]),
               );
             },
-            childCount: articles.length + (_controller.hasMore.value ? 1 : 0),
+            childCount:
+                controller.articles.length + (controller.hasMore ? 1 : 0),
           ),
         );
       },
@@ -313,30 +301,34 @@ class _SearchPageState extends State<SearchPage>
   }
 
   Widget _buildRecentSearchItem(int index) {
-    final query = _controller.recentSearchesNotifier.value[index];
-    final articles = _controller.recentSearchResults[query] ?? [];
-    final isExpanded = _controller.isExpanded[query] ?? false;
+    return Consumer<NewsSearchProvider>(
+      builder: (context, controller, _) {
+        final query = controller.recentSearches[index];
+        final articles = controller.recentSearchResults[query] ?? [];
+        final isExpanded = controller.isExpanded[query] ?? false;
 
-    return Column(
-      children: [
-        ListTile(
-          leading: const Icon(Icons.history, color: AppTheme.secondaryColor),
-          title: Text(query),
-          trailing: IconButton(
-            icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
-            onPressed: () =>
-                setState(() => _controller.isExpanded[query] = !isExpanded),
-          ),
-          onTap: () {
-            _controller.newsSearchController.text = query;
-            _controller.performSearch();
-          },
-        ),
-        if (isExpanded && articles.isNotEmpty)
-          ...articles.map((article) => NewsCard(article: article)),
-        if (index < _controller.recentSearchesNotifier.value.length - 1)
-          Divider(color: Colors.grey[300]),
-      ],
+        return Column(
+          children: [
+            ListTile(
+              leading:
+                  const Icon(Icons.history, color: AppTheme.secondaryColor),
+              title: Text(query),
+              trailing: IconButton(
+                icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+                onPressed: () => controller.toggleExpanded(query),
+              ),
+              onTap: () {
+                controller.newsSearchController.text = query;
+                controller.performSearch();
+              },
+            ),
+            if (isExpanded && articles.isNotEmpty)
+              ...articles.map((article) => NewsCard(article: article)),
+            if (index < controller.recentSearches.length - 1)
+              Divider(color: Colors.grey[300]),
+          ],
+        );
+      },
     );
   }
 

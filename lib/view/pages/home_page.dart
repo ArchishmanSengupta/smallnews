@@ -5,6 +5,8 @@ import 'package:smallnews/controller/controller.dart';
 import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/view.dart';
 
+import 'components/home/home.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -25,45 +27,8 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _buildAppbar(),
+      appBar: AppBarWidget.build(context),
       body: _buildBody(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppbar() {
-    return AppBar(
-      backgroundColor: AppTheme.backgroundColor,
-      leading: GestureDetector(
-        onTap: () {
-          Navigator.push(context, AppRoutes.createRoute(const SearchPage()));
-        },
-        child: const Padding(
-          padding: EdgeInsets.only(top: 20.0),
-          child: Icon(Icons.search, color: Colors.black),
-        ),
-      ),
-      centerTitle: true,
-      title: Padding(
-        padding: const EdgeInsets.only(top: 20.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(
-                AppImages.logo,
-                height: 30,
-                width: 30,
-              ),
-            ),
-            const Text(
-              AppStrings.appName,
-              style: TextStyle(
-                  fontSize: 16, fontFamily: 'Graphik', letterSpacing: 1),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -109,7 +74,7 @@ class _HomePageState extends State<HomePage>
 
   Widget _buildCategoryNewsList(
     String category,
-    NewsListState categoryState,
+    NewsListModel categoryState,
   ) {
     if (categoryState.error != null && categoryState.articles.isEmpty) {
       return Center(
@@ -137,52 +102,67 @@ class _HomePageState extends State<HomePage>
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () async => context.read<NewsProvider>().refresh(category),
-      child: ListView.builder(
-        controller: categoryState.scrollController,
-        physics: const BouncingScrollPhysics(),
-        itemCount: categoryState.hasReachedEnd
-            ? categoryState.articles.length
-            : categoryState.articles.length + 1,
-        itemBuilder: (context, index) {
-          if (index >= categoryState.articles.length) {
-            if (categoryState.error != null) {
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    Text('Error: ${categoryState.error}'),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[900],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+    return CustomScrollView(
+      /// The [PageStorageKey] is used to preserve the scroll position of this [CustomScrollView]
+      /// when navigating between different categories. The [category] string is used as the key
+      /// to uniquely identify this scroll view's position in the page storage.
+      key: PageStorageKey<String>(category),
+
+      controller: categoryState.scrollController,
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        CupertinoSliverRefreshControl(
+          onRefresh: () async => context.read<NewsProvider>().refresh(category),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              if (index == categoryState.totalResults - 1 &&
+                  categoryState.totalResults > 0) {
+                return const EndOfListIndicator();
+              }
+              if (index >= categoryState.articles.length) {
+                if (categoryState.error != null) {
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Text('Error: ${categoryState.error}'),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[900],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => context
+                              .read<NewsProvider>()
+                              .loadMoreArticles(category),
+                          child: const Text('Retry'),
                         ),
-                      ),
-                      onPressed: () => context
-                          .read<NewsProvider>()
-                          .loadMoreArticles(category),
-                      child: const Text('Retry'),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            }
+                  );
+                }
 
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 32.0),
-              child: Center(child: CupertinoActivityIndicator()),
-            );
-          }
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32.0),
+                  child: Center(child: CupertinoActivityIndicator()),
+                );
+              }
 
-          return NewsCard(article: categoryState.articles[index]);
-        },
-      ),
+              return NewsCard(article: categoryState.articles[index]);
+            },
+            childCount: categoryState.hasReachedEnd
+                ? categoryState.articles.length
+                : categoryState.articles.length + 1,
+          ),
+        ),
+      ],
     );
   }
 

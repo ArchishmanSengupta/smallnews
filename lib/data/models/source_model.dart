@@ -1,14 +1,14 @@
-class Source {
+class SourceModel {
   final String? id;
   final String name;
 
-  Source({
+  SourceModel({
     this.id,
     required this.name,
   });
 
-  factory Source.fromJson(Map<String, dynamic> json) {
-    return Source(
+  factory SourceModel.fromJson(Map<String, dynamic> json) {
+    return SourceModel(
       id: json['id'],
       name: json['name'] ?? '',
     );

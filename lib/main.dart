@@ -1,19 +1,3 @@
-/// A Flutter news application that displays news articles.
-///
-/// This application uses the Provider package for state management and
-/// implements a custom theme with the Graphik font family.
-///
-/// The main entry point of the application initializes the [NewsProvider]
-/// and sets up the MaterialApp with custom theming.
-///
-/// The [MyApp] widget serves as the root of the application and configures:
-/// * The application title
-/// * Disable debug banner
-/// * Custom theme settings including background color and font family
-/// * Homepage as the initial route
-
-library;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smallnews/controller/controller.dart';
@@ -29,8 +13,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-        create: (_) => NewsProvider(),
+    return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => NewsProvider()),
+          ChangeNotifierProvider(create: (_) => NewsSearchProvider()),
+        ],
         child: MaterialApp(
           title: AppStrings.appName,
           debugShowCheckedModeBanner: false,

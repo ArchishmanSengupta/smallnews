@@ -10,7 +10,7 @@ class NewsProvider extends ChangeNotifier {
     return _instance;
   }
 
-  final Map<String, NewsListState> _categoryStates = {};
+  final Map<String, NewsListModel> _categoryStates = {};
 
   NewsProvider._internal() {
     init();
@@ -25,7 +25,7 @@ class NewsProvider extends ChangeNotifier {
   }
 
   Future<void> initCategory(String category) async {
-    _categoryStates[category] = NewsListState(
+    _categoryStates[category] = NewsListModel(
       articles: [],
       currentPage: 0,
       totalResults: 0,
@@ -35,7 +35,7 @@ class NewsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final resp = await NewsRepository.fetchNewsByCategory(category, 1);
+      final resp = await NewsService.fetchNewsByCategory(category, 1);
       final scrollController = ScrollController();
 
       scrollController.addListener(() {
@@ -44,7 +44,7 @@ class NewsProvider extends ChangeNotifier {
 
         final maxScroll = scrollController.position.maxScrollExtent;
         final currentScroll = scrollController.position.pixels;
-        const scrollThreshold = 100; // pixels before bottom to trigger load
+        const scrollThreshold = 100;
 
         if (maxScroll - currentScroll <= scrollThreshold &&
             !state.isLoading &&
@@ -53,7 +53,7 @@ class NewsProvider extends ChangeNotifier {
         }
       });
 
-      _categoryStates[category] = NewsListState(
+      _categoryStates[category] = NewsListModel(
         articles: resp.articles,
         currentPage: 1,
         totalResults: resp.totalResults,
@@ -61,7 +61,7 @@ class NewsProvider extends ChangeNotifier {
         scrollController: scrollController,
       );
     } catch (e) {
-      _categoryStates[category] = NewsListState(
+      _categoryStates[category] = NewsListModel(
         articles: [],
         currentPage: 0,
         totalResults: 0,
@@ -69,21 +69,24 @@ class NewsProvider extends ChangeNotifier {
         error: e.toString(),
         scrollController: ScrollController(),
       );
+    } finally {
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   Future<void> loadMoreArticles(String category) async {
     final currentState = _categoryStates[category];
     if (currentState == null ||
         currentState.isLoading ||
-        currentState.hasReachedEnd) return;
+        currentState.hasReachedEnd) {
+      return;
+    }
 
     _categoryStates[category] = currentState.copyWith(isLoading: true);
     notifyListeners();
 
     try {
-      final resp = await NewsRepository.fetchNewsByCategory(
+      final resp = await NewsService.fetchNewsByCategory(
         category,
         currentState.currentPage + 1,
       );
@@ -101,11 +104,12 @@ class NewsProvider extends ChangeNotifier {
         isLoading: false,
         error: e.toString(),
       );
+    } finally {
+      notifyListeners();
     }
-    notifyListeners();
   }
 
-  NewsListState? getState(String category) => _categoryStates[category];
+  NewsListModel? getState(String category) => _categoryStates[category];
 
   void refresh(String category) {
     _categoryStates.remove(category);
