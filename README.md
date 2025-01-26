@@ -5,7 +5,6 @@ https://github.com/user-attachments/assets/c2694128-93d7-4cd2-ba6a-aae3def3fa01
 
 
 
-
 ## Overview
 Smallnews is your go-to app for staying informed with live news updates throughout the day. With a sleek design and user-friendly interface, Smallnews ensures you never miss out on the latest headlines and in-depth stories.
 
@@ -27,10 +26,16 @@ Clear and informative error messages help you understand any issues quickly.
 Enjoy a smooth loading experience with our shimmered loading effect.
 ![Shimmered Loading](https://github.com/user-attachments/assets/687ad7de-1c03-4605-b145-270cfa3f967b)
 
+
 ### Scroll to refresh
 Always stay updated
 
 https://github.com/user-attachments/assets/e01e5daa-ecb6-4904-9f40-5b815fe4866c
+
+### Recent Searches
+Last 5 Recent Searches
+
+![Last 5 Recent Searches](https://github.com/user-attachments/assets/3829df78-41f8-42ab-8bf0-01200cf17fde)
 
 ### Scroll Offset
 
