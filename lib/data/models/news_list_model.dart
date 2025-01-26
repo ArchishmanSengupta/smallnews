@@ -11,6 +11,7 @@ class NewsListModel {
   final ScrollController scrollController;
 
   bool get hasReachedEnd => articles.length % kArticlesPerPage != 0;
+  bool get hasError => error != null;
 
   const NewsListModel({
     required this.articles,
