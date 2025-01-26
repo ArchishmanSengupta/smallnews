@@ -5,17 +5,34 @@ import 'package:intl/intl.dart';
 import 'package:smallnews/data/models/models.dart';
 import 'package:smallnews/env/env.dart';
 
-/// A repository class that handles fetching news data from the News API.
+/// Manages news data retrieval from the News API
+///
+/// Provides methods to fetch news by:
+/// - Search query
+/// - Category
+/// - Top headlines
+///
+/// Handles API request construction, error handling, and response parsing
 class NewsService {
+  /// Retrieves the API key from environment configuration
   static String get apiKey => Env.newsApiKey;
 
+  /// Base authority for News API endpoints
   static const String authority = 'newsapi.org';
 
+  /// Fetches news articles based on a search query
+  ///
+  /// [query] Search term for news articles
+  /// [page] Pagination page number
+  ///
+  /// Returns [NewsResponseModel] containing fetched articles
+  ///
+  /// Throws [Exception] for API request failures or rate limiting
   static Future<NewsResponseModel> fetchNews(String query, int page) async {
     const String path = '/v2/everything';
     final DateTime now = DateTime.now();
 
-    /// For the Free Plan for newsapi.org, the maximum allowed date range is 30 days.
+    /// Limit search to last 30 days due to News API Free Plan restrictions
     final DateTime thirtyDaysAgo = now.subtract(const Duration(days: 30));
     final String fromDate = DateFormat('yyyy-MM-dd').format(thirtyDaysAgo);
 
@@ -44,6 +61,14 @@ class NewsService {
     }
   }
 
+  /// Retrieves top headlines for a specific news category
+  ///
+  /// [category] News category to fetch
+  /// [page] Pagination page number
+  ///
+  /// Returns [NewsResponseModel] with category-specific articles
+  ///
+  /// Throws [Exception] for API request failures or rate limiting
   static Future<NewsResponseModel> fetchNewsByCategory(
       String category, int page) async {
     const String path = '/v2/top-headlines';
@@ -72,6 +97,13 @@ class NewsService {
     }
   }
 
+  /// Retrieves top headlines across all categories
+  ///
+  /// [page] Pagination page number
+  ///
+  /// Returns [NewsResponseModel] containing top headlines
+  ///
+  /// Throws [Exception] for API request failures or rate limiting
   static Future<NewsResponseModel> fetchTopHeadlines(int page) async {
     const String path = '/v2/top-headlines';
 

@@ -1,12 +1,16 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smallnews/controller/controller.dart';
-import 'package:smallnews/data/data.dart';
 import 'package:smallnews/view/view.dart';
 
-import 'components/home/home.dart';
-
+/// Main application screen displaying categorized news feeds
+///
+/// Features:
+/// - Tabbed interface for news categories
+/// - State-preserved scroll positions per category
+/// - Integrated pull-to-refresh
+/// - Paginated content loading
+/// - Error state handling
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -21,153 +25,44 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: categories.length, vsync: this);
+    // Initialize tab controller with category count
+    _tabController = TabController(
+      length: categories.length,
+      // VSync for animation optimization & synchronization
+      vsync: this,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarWidget.build(context),
-      body: _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    final newsProvider = Provider.of<NewsProvider>(context);
-    return Column(
-      children: [
-        const SizedBox(height: 16),
-        TabBar(
-          physics: const AlwaysScrollableScrollPhysics(),
-          indicatorColor: AppTheme.primaryColor.withOpacity(0.5),
-          isScrollable: true,
-          controller: _tabController,
-          labelColor: AppTheme.secondaryColor,
-          overlayColor: WidgetStateProperty.all(Colors.transparent),
-          tabs: categories
-              .map((category) => Tab(
-                    child: Text(
-                      category == 'Technology' ? 'Tech' : category.capitalize(),
-                      style: const TextStyle(height: 1.2),
-                    ),
-                  ))
-              .toList(),
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: categories.map((category) {
-              final categoryState = newsProvider.getState(category);
-              if (categoryState == null) {
-                return const Center(child: CupertinoActivityIndicator());
-              }
-              return _buildCategoryNewsList(
-                category,
-                categoryState,
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategoryNewsList(
-    String category,
-    NewsListModel categoryState,
-  ) {
-    if (categoryState.error != null && categoryState.articles.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Error: ${categoryState.error}'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[900],
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () =>
-                  context.read<NewsProvider>().initCategory(category),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return CustomScrollView(
-      /// The [PageStorageKey] is used to preserve the scroll position of this [CustomScrollView]
-      /// when navigating between different categories. The [category] string is used as the key
-      /// to uniquely identify this scroll view's position in the page storage.
-      key: PageStorageKey<String>(category),
-
-      controller: categoryState.scrollController,
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        CupertinoSliverRefreshControl(
-          onRefresh: () async => context.read<NewsProvider>().refresh(category),
-        ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              if (index == categoryState.totalResults - 1 &&
-                  categoryState.totalResults > 0) {
-                return const EndOfListIndicator();
-              }
-              if (index >= categoryState.articles.length) {
-                if (categoryState.error != null) {
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        Text('Error: ${categoryState.error}'),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[900],
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: () => context
-                              .read<NewsProvider>()
-                              .loadMoreArticles(category),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 32.0),
-                  child: Center(child: CupertinoActivityIndicator()),
+      body: Column(
+        children: [
+          const SizedBox(height: 16),
+          CategoryTabBar(controller: _tabController),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              // Maintain separate states per category
+              children: categories.map((category) {
+                final categoryState =
+                    context.watch<NewsProvider>().getState(category);
+                return CategoryNewsList(
+                  category: category,
+                  categoryState: categoryState,
                 );
-              }
-
-              return NewsCard(article: categoryState.articles[index]);
-            },
-            childCount: categoryState.hasReachedEnd
-                ? categoryState.articles.length
-                : categoryState.articles.length + 1,
+              }).toList(),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   @override
   void dispose() {
+    // Prevent memory leaks
     _tabController.dispose();
     super.dispose();
   }
