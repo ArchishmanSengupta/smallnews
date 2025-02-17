@@ -227,26 +227,4 @@ class NewsService {
   }
 }
 ```
-
-# What can be done better:
-
-1. Using BLoC instead of provider:
-- BLoC centralizes business logic, this will make it easier to coordinate between cached and live data.
-- Pagination: Handling page numbers, loading states, and max item limits.
-- Filters: Debouncing search input, canceling outdated requests.
-- Offline Caching: Coordinating between API and local data sources.
-
-Since i had limited time, i went with provider as BLoC is more verbose and extensive and has a lot of boilerplate.
-
-2. Profile to render at 60fps if needed in future
-- Profile with flame charts, shader compilers
-- check raster threads if there is some scrop of pre-computing requirements
-
-3. Add extensive error handling - News API org side faulty API
-- Right now the newsapi.org is not Correct
-- It gives wrong `totalResults` number
-- checking for the totalResults && article.length becomes important
-
----
-
 Stay informed with Smallnews – your trusted source for live news updates!
